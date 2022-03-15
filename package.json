@@ -1,0 +1,135 @@
+{
+  "name": "@droidsolutions-oss/job-service",
+  "version": "0.9.0",
+  "description": "Base library that provides a way to manage recurring jobs in a database.",
+  "main": "dist/src/NodeJS/Index.js",
+  "types": "dist/src/NodeJS/Index.d.ts",
+  "files": [
+    "dist/src/NodeJS/**/*"
+  ],
+  "scripts": {
+    "test": "dotnet test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/droidsolutions/job-service.git"
+  },
+  "keywords": [
+    "job",
+    "service",
+    "recurring",
+    "worker"
+  ],
+  "author": "Stefan Ißmer <stefan.issmer@droidsolutions.de>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/droidsolutions/job-service/issues"
+  },
+  "homepage": "https://github.com/droidsolutions/job-service#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "peerDependencies": {
+    "cancellationtoken": "^2.2.0"
+  },
+  "dependencies": {
+    "date-fns": "^2.28.0",
+    "nanoid": "^3.3.1"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "16.2.1",
+    "@commitlint/config-conventional": "16.2.1",
+    "@droidsolutions-oss/semantic-release-nuget": "1.0.3",
+    "@droidsolutions-oss/semantic-release-update-file": "1.0.3",
+    "@semantic-release/changelog": "6.0.1",
+    "@semantic-release/git": "10.0.1",
+    "@semantic-release/github": "8.0.2",
+    "@semantic-release/npm": "9.0.0",
+    "@types/node": "17.0.21",
+    "@typescript-eslint/eslint-plugin": "5.12.1",
+    "@typescript-eslint/parser": "5.12.1",
+    "eslint": "8.9.0",
+    "eslint-config-prettier": "8.4.0",
+    "eslint-plugin-jsdoc": "37.9.4",
+    "eslint-plugin-node": "11.1.0",
+    "eslint-plugin-prettier": "4.0.0",
+    "husky": "7.0.4",
+    "semantic-release": "19.0.2",
+    "typescript": "4.5.5"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ],
+    "rules": {
+      "subject-case": [
+        0,
+        "always",
+        "lowerCase"
+      ]
+    }
+  },
+  "release": {
+    "branches": [
+      "+([0-9])?(.{+([0-9]),x}).x",
+      "main",
+      {
+        "name": "alpha",
+        "prerelease": true
+      },
+      {
+        "name": "beta",
+        "prerelease": true
+      },
+      {
+        "name": "develop",
+        "prerelease": true
+      }
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/changelog",
+      "@droidsolutions-oss/semantic-release-update-file",
+      "@semantic-release/npm",
+      "@droidsolutions-oss/semantic-release-nuget",
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "package.json",
+            "package-lock.json",
+            "CHANGELOG.md",
+            "Directory.Build.props"
+          ],
+          "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        }
+      ],
+      "@semantic-release/github"
+    ],
+    "projectPath": "src/DroidSolutions.Oss.SemanticVersion/DroidSolutions.Oss.SemanticVersion.csproj",
+    "npmPublish": true,
+    "includeSymbols": true,
+    "files": [
+      {
+        "path": [
+          "Directory.Build.props"
+        ],
+        "type": "xml",
+        "replacements": [
+          {
+            "key": "Version",
+            "value": "${nextRelease.version}"
+          },
+          {
+            "key": "RepositoryCommit",
+            "value": "${nextRelease.gitHead}"
+          }
+        ]
+      }
+    ]
+  }
+}

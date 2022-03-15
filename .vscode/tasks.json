@@ -1,0 +1,50 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-cs",
+      "command": "dotnet",
+      "type": "shell",
+      "args": [
+        "build",
+        // Ask dotnet build to generate full paths for file names.
+        "/property:GenerateFullPaths=true",
+        // Do not generate summary otherwise it leads to duplicate errors in Problems panel
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "group": "build",
+      "presentation": {
+        "reveal": "silent"
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build-ts",
+      "type": "typescript",
+      "tsconfig": "tsconfig.json",
+      "problemMatcher": ["$tsc"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "dependsOn": ["build-cs"]
+    },
+    {
+      "label": "dotnet test",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["test"],
+      "group": "test",
+      "problemMatcher": ["$msCompile"]
+    },
+    {
+      "label": "lint",
+      "type": "eslint",
+      "dependsOn": ["build-cs"],
+      "group": "build",
+      "problemMatcher": ["$eslint-stylish"]
+    }
+  ]
+}
