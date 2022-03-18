@@ -43,7 +43,7 @@
   "devDependencies": {
     "@commitlint/cli": "16.2.3",
     "@commitlint/config-conventional": "16.2.1",
-    "@droidsolutions-oss/semantic-release-nuget": "1.0.3",
+    "@droidsolutions-oss/semantic-release-nuget": "1.1.0-beta.1",
     "@droidsolutions-oss/semantic-release-update-file": "1.0.3",
     "@semantic-release/changelog": "6.0.1",
     "@semantic-release/git": "10.0.1",
@@ -111,7 +111,11 @@
       ],
       "@semantic-release/github"
     ],
-    "projectPath": "src/DroidSolutions.Oss.SemanticVersion/DroidSolutions.Oss.SemanticVersion.csproj",
+    "projectPath": [
+      "src/DroidSolutions.Oss.JobService/DroidSolutions.Oss.JobService.csproj",
+      "src/DroidSolutions.Oss.JobService.EFCore/DroidSolutions.Oss.JobService.EFCore.csproj",
+      "src/DroidSolutions.Oss.JobService.Postgres/DroidSolutions.Oss.JobService.Postgres.csproj"
+    ],
     "npmPublish": true,
     "includeSymbols": true,
     "files": [
