@@ -32,6 +32,9 @@ module.exports = {
       },
     ],
   },
-  settings: { jsdoc: { mode: "typescript" } },
+  settings: {
+    jsdoc: { mode: "typescript" },
+    node: { tryExtensions: [".js", ".ts"] },
+  },
   ignorePatterns: ["coverage", "dist", ".eslintrc.js", "src/NodeJS/Generated/*"],
 };

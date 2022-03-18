@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-empty-function */
 /**
  * A function that retrieves an instance of a logger.
@@ -41,34 +42,10 @@ interface LogFunction {
 }
 
 export class EmtpyLogger implements SimpleLogger {
-  trace(
-    _obj: Record<string, unknown> | string,
-    _msg?: string,
-    ..._args: any[]
-  ): void {}
-  debug(
-    _obj: Record<string, unknown> | string,
-    _msg?: string,
-    ..._args: any[]
-  ): void {}
-  info(
-    _obj: Record<string, unknown> | string,
-    _msg?: string,
-    ..._args: any[]
-  ): void {}
-  warn(
-    _obj: Record<string, unknown> | string,
-    _msg?: string,
-    ..._args: any[]
-  ): void {}
-  error(
-    _obj: Record<string, unknown> | string,
-    _msg?: string,
-    ..._args: any[]
-  ): void {}
-  fatal(
-    _obj: Record<string, unknown> | string,
-    _msg?: string,
-    ..._args: any[]
-  ): void {}
+  trace(_obj: Record<string, unknown> | string, _msg?: string, ..._args: any[]): void {}
+  debug(_obj: Record<string, unknown> | string, _msg?: string, ..._args: any[]): void {}
+  info(_obj: Record<string, unknown> | string, _msg?: string, ..._args: any[]): void {}
+  warn(_obj: Record<string, unknown> | string, _msg?: string, ..._args: any[]): void {}
+  error(_obj: Record<string, unknown> | string, _msg?: string, ..._args: any[]): void {}
+  fatal(_obj: Record<string, unknown> | string, _msg?: string, ..._args: any[]): void {}
 }

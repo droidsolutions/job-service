@@ -163,6 +163,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
   /**
    * A wrapper around the repository to help add failed progress to the job.
+   *
    * @param {number} amount The amount of failed progress to add.
    */
   public async addFailedProgressAsync(amount?: number): Promise<void> {
@@ -188,7 +189,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
    *
    * @param {number} seconds The amount of seconds to wait.
    * @param {CancellationToken} cancellationToken A token to cancel the waiting.
-   * @returns A promise that resolves after the given amount of seconds or rejects when the token is cancelled.
+   * @returns {Promise<void>} A promise that resolves after the given amount of seconds or rejects when the token is cancelled.
    */
   private async delay(seconds: number, cancellationToken: CancellationToken): Promise<void> {
     return new Promise((resolve, reject) => {
