@@ -1,3 +1,10 @@
+# [1.0.0-develop.3](https://github.com/droidsolutions/job-service/compare/v1.0.0-develop.2...v1.0.0-develop.3) (2022-03-18)
+
+
+### Bug Fixes
+
+* **release:** correctly set version during release ([a00c8fe](https://github.com/droidsolutions/job-service/commit/a00c8fe60a7e00a0019db826314e66152397b5e7))
+
 # [1.0.0-develop.2](https://github.com/droidsolutions/job-service/compare/v1.0.0-develop.1...v1.0.0-develop.2) (2022-03-18)
 
 
