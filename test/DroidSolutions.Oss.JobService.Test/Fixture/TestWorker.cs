@@ -78,7 +78,7 @@ public class TestWorker : JobWorkerBase<TestParameter, TestResult>
     IServiceScope serviceScope,
     CancellationToken cancellationToken)
   {
-    return _processFunc?.Invoke(job) ?? Task.FromResult(new TestResult
+    return _processFunc?.Invoke(job) ?? Task.FromResult<TestResult?>(new TestResult
     {
       CheckedSomething = true,
       IgnoredItems = 12,

@@ -17,7 +17,7 @@ public class ConsoleLogger : ILogger
 
   public bool IsEnabled(LogLevel logLevel) => (int)logLevel >= 2;
 
-  public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+  public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
   {
     Console.WriteLine("{0} [{1}] {2}", _categoryName, eventId, formatter(state, exception));
 
