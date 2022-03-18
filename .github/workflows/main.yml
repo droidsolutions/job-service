@@ -16,6 +16,7 @@ jobs:
       - run: dotnet build
       - run: npm ci
       - run: npx tsc
+      - run: npm run lint
   coverage:
     runs-on: ubuntu-latest
     container: mcr.microsoft.com/dotnet/sdk:6.0
