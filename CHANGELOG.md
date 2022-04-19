@@ -1,3 +1,10 @@
+# [1.0.0-develop.4](https://github.com/droidsolutions/job-service/compare/v1.0.0-develop.3...v1.0.0-develop.4) (2022-04-19)
+
+
+### Bug Fixes
+
+* **JobWorkerBase:** respect calculated duedate when adding initial job ([4497723](https://github.com/droidsolutions/job-service/commit/449772344c061fd7747dfba23f0d7797ba33a456))
+
 # [1.0.0-develop.3](https://github.com/droidsolutions/job-service/compare/v1.0.0-develop.2...v1.0.0-develop.3) (2022-03-18)
 
 
