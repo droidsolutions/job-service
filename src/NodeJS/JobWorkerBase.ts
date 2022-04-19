@@ -240,7 +240,12 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
         }
       }
     } else if (firstRun && settings.addInitialJob) {
-      await this.addInitialJob(settings, cancellationToken);
+      try {
+        await this.addInitialJob(settings, cancellationToken);
+      } catch (err) {
+        this.baseLogger.fatal({ err }, `Unable to create initial job: ${(err as Error).message}`);
+        throw new Error("Unable to create initial job.");
+      }
     }
 
     this.currentJob = undefined;
@@ -292,8 +297,10 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     if (existingJob) {
       this.baseLogger.info("Found existing job %d due %s, skipping add of initial job.", existingJob.id, existingJob.dueDate.toUTCString());
     } else {
+      this.baseLogger.info("Did not find any existing %s job that is due until %s, adding initial job.", settings.jobType, dueDate);
+
       // create a new job if none exists that is due until the calculated time
-      await this.jobRepo.addJobAsync(settings.jobType, undefined, params, cancellationToken);
+      await this.jobRepo.addJobAsync(settings.jobType, dueDate, params, cancellationToken);
     }
   }
 }
