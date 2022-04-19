@@ -1,3 +1,10 @@
+# [1.0.0-develop.7](https://github.com/droidsolutions/job-service/compare/v1.0.0-develop.6...v1.0.0-develop.7) (2022-04-19)
+
+
+### Features
+
+* **NPM:** export LoggerFactgory and camcellationError typeguard ([87ff1b5](https://github.com/droidsolutions/job-service/commit/87ff1b5394c7efe937233bdecb78ee99b3524092))
+
 # [1.0.0-develop.6](https://github.com/droidsolutions/job-service/compare/v1.0.0-develop.5...v1.0.0-develop.6) (2022-04-19)
 
 
