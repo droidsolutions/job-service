@@ -1,3 +1,10 @@
+# [1.0.0-develop.5](https://github.com/droidsolutions/job-service/compare/v1.0.0-develop.4...v1.0.0-develop.5) (2022-04-19)
+
+
+### Bug Fixes
+
+* **NPM:** add missing files to package ([7ec3571](https://github.com/droidsolutions/job-service/commit/7ec3571b5621d1b28d231eb208b38a33d02f015d))
+
 # [1.0.0-develop.4](https://github.com/droidsolutions/job-service/compare/v1.0.0-develop.3...v1.0.0-develop.4) (2022-04-19)
 
 
