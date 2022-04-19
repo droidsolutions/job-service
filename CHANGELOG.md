@@ -1,3 +1,10 @@
+# [1.0.0-develop.6](https://github.com/droidsolutions/job-service/compare/v1.0.0-develop.5...v1.0.0-develop.6) (2022-04-19)
+
+
+### Bug Fixes
+
+* **NPM:** add export for IJobRepository ([6d499d6](https://github.com/droidsolutions/job-service/commit/6d499d6f4ce977bcdffbc01123acbba08092a72d))
+
 # [1.0.0-develop.5](https://github.com/droidsolutions/job-service/compare/v1.0.0-develop.4...v1.0.0-develop.5) (2022-04-19)
 
 
