@@ -1,3 +1,10 @@
+# [1.0.0-develop.8](https://github.com/droidsolutions/job-service/compare/v1.0.0-develop.7...v1.0.0-develop.8) (2022-04-21)
+
+
+### Features
+
+* **NPM:** add UTC converter to exports ([2ae9e69](https://github.com/droidsolutions/job-service/commit/2ae9e69860e08efc144f85910475948dda5d2683))
+
 # [1.0.0-develop.7](https://github.com/droidsolutions/job-service/compare/v1.0.0-develop.6...v1.0.0-develop.7) (2022-04-19)
 
 
