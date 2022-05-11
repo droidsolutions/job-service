@@ -1,3 +1,21 @@
+# 1.0.0 (2022-05-11)
+
+
+### Bug Fixes
+
+* **JobWorkerBase:** respect calculated duedate when adding initial job ([4497723](https://github.com/droidsolutions/job-service/commit/449772344c061fd7747dfba23f0d7797ba33a456))
+* **NPM:** add export for IJobRepository ([6d499d6](https://github.com/droidsolutions/job-service/commit/6d499d6f4ce977bcdffbc01123acbba08092a72d))
+* **NPM:** add missing files to package ([7ec3571](https://github.com/droidsolutions/job-service/commit/7ec3571b5621d1b28d231eb208b38a33d02f015d))
+* **release:** correctly set version during release ([a00c8fe](https://github.com/droidsolutions/job-service/commit/a00c8fe60a7e00a0019db826314e66152397b5e7))
+* **release:** minor fix to trigger new release ([011e47a](https://github.com/droidsolutions/job-service/commit/011e47a4abac0d7af99d8b32ae3243ff6aba000d))
+
+
+### Features
+
+* initial release ([d71d5b3](https://github.com/droidsolutions/job-service/commit/d71d5b3704ef13af82efaa8d2cf1588d45a55048))
+* **NPM:** add UTC converter to exports ([2ae9e69](https://github.com/droidsolutions/job-service/commit/2ae9e69860e08efc144f85910475948dda5d2683))
+* **NPM:** export LoggerFactgory and camcellationError typeguard ([87ff1b5](https://github.com/droidsolutions/job-service/commit/87ff1b5394c7efe937233bdecb78ee99b3524092))
+
 # [1.0.0-develop.8](https://github.com/droidsolutions/job-service/compare/v1.0.0-develop.7...v1.0.0-develop.8) (2022-04-21)
 
 
