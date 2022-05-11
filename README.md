@@ -9,7 +9,15 @@ Examples of jobs are:
 - check every hour for new entries in a database to process
 - download current information from an API every day
 - run a job to clean up no longer needed data
-- want to delay a task coming from UI to execute at a later time
+- delay a task coming from UI to execute at a later time
+
+## Why not Cron?
+
+For recurring jobs you could also use a cronjob and there is nothing wrong with that. In general this library allows to have a similar experience like with a cron job with the following differences:
+- Jobs are not executed exactly at a given time. Instead they have a due date and whenever a runner is checking for a job it will execute the job with the oldest due date that already passed. Depending on the check interval you configure there might be some time between due date and actual execution. In fact, jobs do not need to be recurring at all, you can use this library to manage one time jobs.
+- Jobs execution intervals are not always equal. When a job is executed and it is configured to add another job, the next job is added **after** the previous job is done executing. The next due date will be calculated from that point on, so time between jobs depend on the execution time and the configured interval.
+- Jobs are persistant, you have a storage for all jobs (presumably a database table) that you can use to display job executions or view results of the jobs.
+- Job execution can be integrated in your application. While a cronjob probably is an own piece of software or a script, the job worker can be integrated in your application and share code with it. This is useful when the job needs logic that other parts of your application also need. You also can easily dynamically add a job from your application logic if it is needed.
 
 # Packages
 
