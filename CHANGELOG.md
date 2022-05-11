@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/droidsolutions/job-service/compare/v1.0.0...v1.0.1) (2022-05-11)
+
+
+### Bug Fixes
+
+* real Initial release ([6388a50](https://github.com/droidsolutions/job-service/commit/6388a50784833d11b36df138be7749b1b70fb885))
+
 # 1.0.0 (2022-05-11)
 
 
