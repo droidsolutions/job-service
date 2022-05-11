@@ -14,14 +14,15 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryBranch>main</RepositoryBranch>
-    <RepositoryCommit>df8986e91be001acf076054863bb01f510a98b90</RepositoryCommit>
+    <RepositoryCommit>2ae9e69860e08efc144f85910475948dda5d2683</RepositoryCommit>
+    <Version>1.0.0-develop.8</Version>
   </PropertyGroup>
   
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-    <PackageReference Include="Roslynator.Analyzers" Version="4.0.2" PrivateAssets="All" />
-    <PackageReference Include="Roslynator.CodeAnalysis.Analyzers" Version="4.0.2" PrivateAssets="All" />
-    <PackageReference Include="Roslynator.Formatting.Analyzers" Version="4.0.2" PrivateAssets="All" />
+    <PackageReference Include="Roslynator.Analyzers" Version="4.1.0" PrivateAssets="All" />
+    <PackageReference Include="Roslynator.CodeAnalysis.Analyzers" Version="4.1.0" PrivateAssets="All" />
+    <PackageReference Include="Roslynator.Formatting.Analyzers" Version="4.1.0" PrivateAssets="All" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="All"/>
   </ItemGroup>
   
