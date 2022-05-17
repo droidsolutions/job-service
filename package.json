@@ -41,7 +41,7 @@
     "nanoid": "^3.3.4"
   },
   "devDependencies": {
-    "@commitlint/cli": "16.2.4",
+    "@commitlint/cli": "17.0.0",
     "@commitlint/config-conventional": "16.2.4",
     "@droidsolutions-oss/semantic-release-nuget": "1.1.1",
     "@droidsolutions-oss/semantic-release-update-file": "1.2.0",
