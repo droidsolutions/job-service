@@ -43,10 +43,19 @@ public class InMemoryJobRepository : JobRepositoryBase<TestContext, TestParamete
     string type,
     DateTime? dueDate,
     TestParameter? parameters,
+    bool includeStarted = false,
     CancellationToken cancellationToken = default)
   {
-    IQueryable<Job<TestParameter, TestResult>> query = Context.Jobs
-      .Where(x => x.Type == type && x.State == JobState.Requested);
+    IQueryable<Job<TestParameter, TestResult>> query = Context.Jobs.Where(x => x.Type == type);
+
+    if (includeStarted)
+    {
+      query = query.Where(x => x.State == JobState.Started || x.State == JobState.Requested);
+    }
+    else
+    {
+      query = query.Where(x => x.State == JobState.Requested);
+    }
 
     if (dueDate.HasValue)
     {

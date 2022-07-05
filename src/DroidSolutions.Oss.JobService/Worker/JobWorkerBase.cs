@@ -339,12 +339,13 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
       settings.JobType,
       dueDate,
       parameters,
+      true,
       cancellationToken);
 
     if (existingJob != null)
     {
       _logger.LogInformation(
-        "Found existing job {JobId} due {DueDate}, skipping add of initial job.",
+        "Found existing job {JobId} due {DueDate}, skip adding initial job.",
         existingJob.Id,
         existingJob.DueDate);
     }

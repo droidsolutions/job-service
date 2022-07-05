@@ -95,12 +95,17 @@ public abstract class JobRepositoryBase<TContext, TParams, TResult> : IJobReposi
   /// <param name="type">The type of the job.</param>
   /// <param name="dueDate">The date when the job should be done.</param>
   /// <param name="parameters">The parameters of the job.</param>
+  /// <param name="includeStarted">
+  /// If <see langword="true"/> job will also be found if state is <see cref="JobState.Started"/>, else only jobs that are
+  /// <see cref="JobState.Requested"/> are found.
+  /// </param>
   /// <param name="cancellationToken">A token to cancel the operation.</param>
   /// <returns>The job if found or <see langword="null"/> if not.</returns>
   public abstract Task<IJob<TParams, TResult>?> FindExistingJobAsync(
     string type,
     DateTime? dueDate,
     TParams? parameters,
+    bool includeStarted = false,
     CancellationToken cancellationToken = default);
 
   /// <summary>

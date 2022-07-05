@@ -39,7 +39,7 @@ public class PostgresJobRepositoryTest
   [Fact]
   public async Task FindExistingJob_ThrowsInvalidOperationException_WhenNoDueDateAndParametersAreGiven()
   {
-    await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.FindExistingJobAsync("type", null, null, default));
+    await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.FindExistingJobAsync("type", null, null, false, default));
   }
 
   [Fact]
@@ -56,7 +56,7 @@ public class PostgresJobRepositoryTest
     _setup.Context.Jobs.Add(existingJob);
     await _setup.Context.SaveChangesAsync();
 
-    IJob<TestParameter, TestResult>? job = await _sut.FindExistingJobAsync(type, dueDate, null, default);
+    IJob<TestParameter, TestResult>? job = await _sut.FindExistingJobAsync(type, dueDate, null, false, default);
     job?.Should().BeEquivalentTo(existingJob);
   }
 
@@ -78,7 +78,7 @@ public class PostgresJobRepositoryTest
 
     await _setup.Context.SaveChangesAsync();
 
-    IJob<TestParameter, TestResult>? job = await _sut.FindExistingJobAsync(type, dueDate, null, default);
+    IJob<TestParameter, TestResult>? job = await _sut.FindExistingJobAsync(type, dueDate, null, false, default);
     job.Should().BeNull();
   }
 
@@ -95,7 +95,7 @@ public class PostgresJobRepositoryTest
     _setup.Context.Jobs.Add(existingJob);
     await _setup.Context.SaveChangesAsync();
 
-    IJob<TestParameter, TestResult>? job = await _sut.FindExistingJobAsync(type, null, _testParameter, default);
+    IJob<TestParameter, TestResult>? job = await _sut.FindExistingJobAsync(type, null, _testParameter, false, default);
     job.Should().NotBeNull();
     job!.Parameters.Should().BeEquivalentTo(_testParameter);
   }
@@ -118,6 +118,50 @@ public class PostgresJobRepositoryTest
 
     IJob<TestParameter, TestResult>? job = await _sut.FindExistingJobAsync(type, null, searchParam);
     job.Should().BeNull();
+  }
+
+  [Fact]
+  public async Task FindExistingJobAsync_ShouldNotFindStartedJob()
+  {
+    var type = "another-job";
+    var dueDate = new DateTime(2022, 7, 5, 15, 8, 23, DateTimeKind.Utc);
+    var existingJob = new Job<TestParameter, TestResult>
+    {
+      DueDate = dueDate,
+      State = JobState.Started,
+      Type = type,
+    };
+
+    // ToDo maybe clear table for every test?
+    _setup.Context.Jobs.RemoveRange(_setup.Context.Jobs);
+    _setup.Context.Jobs.Add(existingJob);
+
+    await _setup.Context.SaveChangesAsync();
+
+    IJob<TestParameter, TestResult>? job = await _sut.FindExistingJobAsync(type, dueDate, null, false, default);
+    job.Should().BeNull();
+  }
+
+  [Fact]
+  public async Task FindExistingJobAsync_ShouldFindStartedJob_WhenIncludeStartedIsTrue()
+  {
+    var type = "another-job";
+    var dueDate = new DateTime(2022, 7, 5, 15, 8, 23, DateTimeKind.Utc);
+    var existingJob = new Job<TestParameter, TestResult>
+    {
+      DueDate = dueDate,
+      State = JobState.Started,
+      Type = type,
+    };
+
+    // ToDo maybe clear table for every test?
+    _setup.Context.Jobs.RemoveRange(_setup.Context.Jobs);
+    _setup.Context.Jobs.Add(existingJob);
+
+    await _setup.Context.SaveChangesAsync();
+
+    IJob<TestParameter, TestResult>? job = await _sut.FindExistingJobAsync(type, dueDate, null, true, default);
+    job.Should().NotBeNull();
   }
 
   [Fact]

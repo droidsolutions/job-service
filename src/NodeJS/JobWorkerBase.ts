@@ -281,7 +281,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
   }
 
   private async addInitialJob(settings: IJobWorkerSettings, cancellationToken: CancellationToken) {
-    // calculate tdate until a job should be exist
+    // calculate date until which a job with duedate should exist
     let dueDate = transformDateToUtc();
     if (settings.addNextJobAfter) {
       // use intervall between jobs as limit
@@ -292,7 +292,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     }
 
     const params = this.getInitialJobParameters();
-    const existingJob = await this.jobRepo.findExistingJobAsync(settings.jobType, dueDate, params, cancellationToken);
+    const existingJob = await this.jobRepo.findExistingJobAsync(settings.jobType, dueDate, params, true, cancellationToken);
 
     if (existingJob) {
       this.baseLogger.info("Found existing job %d due %s, skipping add of initial job.", existingJob.id, existingJob.dueDate.toUTCString());

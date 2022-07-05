@@ -47,6 +47,10 @@ public class PostgresJobRepository<TContext, TParams, TResult> : JobRepositoryBa
   /// <param name="type">The type of the job.</param>
   /// <param name="dueDate">The date when the job should be done.</param>
   /// <param name="parameters">The parameters of the job.</param>
+  /// <param name="includeStarted">
+  /// If <see langword="true"/> job will also be found if state is <see cref="JobState.Started"/>, else only jobs that are
+  /// <see cref="JobState.Requested"/> are found.
+  /// </param>
   /// <param name="cancellationToken">A token to cancel the operation.</param>
   /// <returns>The job if found or <see langword="null"/> if not.</returns>
   /// <throws Exception="InvalidOperationException">
@@ -56,6 +60,7 @@ public class PostgresJobRepository<TContext, TParams, TResult> : JobRepositoryBa
     string type,
     DateTime? dueDate,
     TParams? parameters,
+    bool includeStarted = false,
     CancellationToken cancellationToken = default)
   {
     if (!dueDate.HasValue && parameters == null)
@@ -63,7 +68,16 @@ public class PostgresJobRepository<TContext, TParams, TResult> : JobRepositoryBa
       throw new InvalidOperationException("Either dueDate or parameters must be given to find a job.");
     }
 
-    IQueryable<Job<TParams, TResult>> query = Context.Jobs.Where(x => x.Type == type && x.State == JobState.Requested);
+    IQueryable<Job<TParams, TResult>> query = Context.Jobs.Where(x => x.Type == type);
+
+    if (includeStarted)
+    {
+      query = query.Where(x => x.State == JobState.Requested || x.State == JobState.Started);
+    }
+    else
+    {
+      query = query.Where(x => x.State == JobState.Requested);
+    }
 
     if (dueDate.HasValue)
     {
