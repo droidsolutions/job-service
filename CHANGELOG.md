@@ -1,3 +1,19 @@
+# [2.0.0-develop.1](https://github.com/droidsolutions/job-service/compare/v1.0.1...v2.0.0-develop.1) (2022-07-05)
+
+
+### Bug Fixes
+
+* prevent add initial job if another is running ([e4b607a](https://github.com/droidsolutions/job-service/commit/e4b607a00881bacc3f68749f2548b06ad71d6eb5))
+
+
+### BREAKING CHANGES
+
+* IJobRepository.FindExistingJobAsync now has an additional parameter includeStarted
+to also find a job that is started.
+
+Fixes a bug where a starting worker would add an initial job while another running worker is
+executing the same job.
+
 ## [1.0.1](https://github.com/droidsolutions/job-service/compare/v1.0.0...v1.0.1) (2022-05-11)
 
 
