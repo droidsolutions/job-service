@@ -8,6 +8,8 @@ updates:
       interval: daily
     assignees:
       - "kampfmoehre"
+    commit-message:
+      prefix-development: "chore"
   - directory: /
     open-pull-requests-limit: 10
     package-ecosystem: npm
