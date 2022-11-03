@@ -13,5 +13,5 @@ public class TestContext : DbContext, IJobContext<TestParameter, TestResult>
   {
   }
 
-  public DbSet<Job<TestParameter, TestResult>> Jobs { get; set; }
+  public DbSet<Job<TestParameter, TestResult>> Jobs { get; set; } = null!;
 }

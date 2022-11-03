@@ -226,6 +226,24 @@ public abstract class JobRepositoryBase<TContext, TParams, TResult> : IJobReposi
     }
   }
 
+  /// <inheritdoc/>
+  public async Task<long> CountJobsAsync(string type, JobState? state = null, CancellationToken cancellationToken = default)
+  {
+    var query = Context.Jobs.AsQueryable();
+
+    if (!string.IsNullOrEmpty(type))
+    {
+      query = query.Where(j => j.Type == type);
+    }
+
+    if (state.HasValue)
+    {
+      query = query.Where(j => j.State == state.Value);
+    }
+
+    return await query.LongCountAsync(cancellationToken);
+  }
+
   /// <summary>
   /// Marks the given job as started and sets the runner and updated property. Also starts a timer and adds a reference to the timer to
   /// the internal timer list.

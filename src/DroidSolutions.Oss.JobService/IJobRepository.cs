@@ -43,6 +43,19 @@ public interface IJobRepository<TParams, TResult>
     bool failed = false,
     [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
     CancellationToken cancellationToken = default);
+  
+  /// <summary>
+  /// Counts the jobs in the database optionally filtered by type or state.
+  /// </summary>
+  /// <param name="type">The type of the job.</param>
+  /// <param name="state">The state of the job.</param>
+  /// <param name="cancellationToken">A token to cancel the operation.</param>
+  /// <returns>The amount of jobs in the database.</returns>
+  Task<long> CountJobsAsync(
+      string type,
+      JobState? state = null,
+      [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
+      CancellationToken cancellationToken = default);
 
   /// <summary>
   /// Checks if a job with the given conditions already exists and returns it if so.
