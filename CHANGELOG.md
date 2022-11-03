@@ -1,3 +1,10 @@
+# [2.0.0-develop.2](https://github.com/droidsolutions/job-service/compare/v2.0.0-develop.1...v2.0.0-develop.2) (2022-11-03)
+
+
+### Features
+
+* **JobRepository:** add method to count jobs ([05f6475](https://github.com/droidsolutions/job-service/commit/05f64757f874c76ca2a92fa8e1556147c55d2a63))
+
 # [2.0.0-develop.1](https://github.com/droidsolutions/job-service/compare/v1.0.1...v2.0.0-develop.1) (2022-07-05)
 
 
