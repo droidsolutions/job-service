@@ -214,4 +214,30 @@ public class JobRepositoryBaseTest
     await _sut.ResetJobAsync(job);
     job.ProcessingTimeMs.Should().BeNull();
   }
+
+  [Fact]
+  public async Task CountJob_ShouldCountAllJobs()
+  {
+    var job = new Job<TestParameter, TestResult> { State = JobState.Finished, Type = "count-jobs", };
+    _setup.Context.Jobs.Add(job);
+    await _setup.Context.SaveChangesAsync();
+
+    long count = await _sut.CountJobsAsync("count-jobs");
+
+    count.Should().Be(1);
+  }
+
+  [Fact]
+  public async Task CountJob_ShouldCountJobsByState()
+  {
+    var job1 = new Job<TestParameter, TestResult> { State = JobState.Finished, Type = "count-jobs", };
+    var job2 = new Job<TestParameter, TestResult> { State = JobState.Started, Type = "count-jobs", };
+    var job3 = new Job<TestParameter, TestResult> { State = JobState.Requested, Type = "count-jobs", };
+    _setup.Context.Jobs.AddRange(new [] { job1, job2, job3 });
+    await _setup.Context.SaveChangesAsync();
+
+    long count = await _sut.CountJobsAsync("count-jobs", JobState.Started);
+
+    count.Should().Be(1);
+  }
 }
