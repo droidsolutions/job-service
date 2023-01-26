@@ -243,12 +243,12 @@ public class PostgresJobRepository<TContext, TParams, TResult> : JobRepositoryBa
 
   private string GetTableName(out IEntityType entityType)
   {
-    IEntityType? et = Context.Model.FindEntityType(typeof(Job<TParams, TResult>));
+    IEntityType? et = Context.Model.FindEntityType(typeof(JobBase));
     var table = et?.GetSchemaQualifiedTableName();
 
     if (et is null || string.IsNullOrEmpty(table))
     {
-      throw new InvalidOperationException($"Unable to table name from entity {typeof(Job<TParams, TResult>)}.");
+      throw new InvalidOperationException($"Unable to get table name from entity {typeof(JobBase)}.");
     }
 
     entityType = et;
