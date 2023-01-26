@@ -1,3 +1,10 @@
+# [2.0.0-develop.3](https://github.com/droidsolutions/job-service/compare/v2.0.0-develop.2...v2.0.0-develop.3) (2023-01-26)
+
+
+### Features
+
+* add non generic IJobBase and JobBase ([2472960](https://github.com/droidsolutions/job-service/commit/24729609d5bdf6c310f0ca656d78bd6884fd80e0))
+
 # [2.0.0-develop.2](https://github.com/droidsolutions/job-service/compare/v2.0.0-develop.1...v2.0.0-develop.2) (2022-11-03)
 
 
