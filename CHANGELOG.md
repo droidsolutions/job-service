@@ -1,3 +1,10 @@
+# [2.0.0-develop.4](https://github.com/droidsolutions/job-service/compare/v2.0.0-develop.3...v2.0.0-develop.4) (2023-01-26)
+
+
+### Bug Fixes
+
+* **PostgresJobRepo:** find table by base entity ([849f09a](https://github.com/droidsolutions/job-service/commit/849f09a52788e6e8323d48d0b982f37cb8109f58))
+
 # [2.0.0-develop.3](https://github.com/droidsolutions/job-service/compare/v2.0.0-develop.2...v2.0.0-develop.3) (2023-01-26)
 
 
