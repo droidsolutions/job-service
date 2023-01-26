@@ -195,22 +195,12 @@ The concrte implementation depens on the kind of database you want to use. There
    ```cs
    public class DeleteJobSettings : JobWorkerSettings
    {
-     private int _deleteJobIntervalMinutes = 120;
-
      public DeleteJobSettings()
        : base("visitor:cleanup")
      {
      }
 
-     public int DeleteJobIntervalMinutes
-     {
-       get => _deleteJobIntervalMinutes;
-       set
-       {
-         _deleteJobIntervalMinutes = value;
-         AddNextJobAfter = TimeSpan.FromMinutes(value);
-       }
-     }
+     public int MySpecialSetting { get; set; }
    }
    ```
 
@@ -305,24 +295,28 @@ You can provide the job type in the constructor when instantiating your settings
 
 ### InitialDelaySeconds
 
-(Optional, default 30)
+(Optional, default `30`)
 
 This settings controls the initial delay before the worker will start. This is used to prevent the first job run before the rest of the application is finished starting, due to the way ASP.NET Core handles `BackgroundService`s. The worker will wait the given amount of seconds before looking for the first job.
 
 ### JobPollingIntervalSeconds
 
-(Optional, default 10)
+(Optional, default `10`)
 
 This settings controls the time between job processings. Once the [InitialDelaySeconds](#initialdelayseconds) have passed the worker will begin looking for the job of the type specified in the [JobType](#jobtype) that has the oldest due date. After the job is processed or if no job exists the worker will wait the amount of seconds given in this setting until it checks for a job again.
 
 ### AddNextJobAfter
 
-(Optional)
+(Optional, default `null`)
 
 If a `TimeSpan` is given to this setting then the worker will add a new job after it finishes processing one and set the due date to the current date plus the time span. With this you can create an endless job that is executed every given time span.
 
+Leave this empty if you want a one time job (or create jobs from somewhere else).
+
+**Note:** You can specify `TimeSpan` values via `appsettings.json` by following [Standard TimeSpan format strings](https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-timespan-format-strings).
+
 ### AddInitialJob
 
-(Optional, default false)
+(Optional, default `false`)
 
 If given the worker will look for a job of the given type with a due date in the past. If none is found the worker creates one and calls the `GetInitialJobParameters` method to get the parameters of it. The due date of the initial job will be the current date plus the [AddNextJobAfter](#addnextjobafter) period of time.
