@@ -19,7 +19,7 @@ public class JobTest
       DateTime due = DateTime.UtcNow.AddMinutes(3);
       var type = "constructor-test";
       JobState state = JobState.Requested;
-      var job = new Job<TestParameter, TestResult>(id, now, due, state, type);
+      var job = new JobBase(id, now, due, state, type);
 
       job.Id.Should().Be(id);
       job.CreatedAt.Should().Be(now);

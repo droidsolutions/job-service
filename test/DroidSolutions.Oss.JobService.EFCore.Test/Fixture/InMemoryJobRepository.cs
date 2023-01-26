@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,7 +19,7 @@ public class InMemoryJobRepository : JobRepositoryBase<TestContext, TestParamete
   }
 
   public override async Task AddProgressAsync(
-    IJob<TestParameter, TestResult> job,
+    IJobBase job,
     int items = 1,
     bool failed = false,
     CancellationToken cancellationToken = default)
@@ -46,7 +45,9 @@ public class InMemoryJobRepository : JobRepositoryBase<TestContext, TestParamete
     bool includeStarted = false,
     CancellationToken cancellationToken = default)
   {
-    IQueryable<Job<TestParameter, TestResult>> query = Context.Jobs.Where(x => x.Type == type);
+    IQueryable<Job<TestParameter, TestResult>> query = Context.Jobs
+      .Where(x => x.Type == type)
+      .Cast<Job<TestParameter, TestResult>>();
 
     if (includeStarted)
     {
@@ -80,6 +81,7 @@ public class InMemoryJobRepository : JobRepositoryBase<TestContext, TestParamete
   {
     Job<TestParameter, TestResult>? job = await Context.Jobs
       .OrderBy(x => x.DueDate)
+      .Cast<Job<TestParameter, TestResult>>()
       .FirstOrDefaultAsync(
         x => x.State == JobState.Requested && x.Type == type && x.DueDate <= DateTime.UtcNow,
         cancellationToken);

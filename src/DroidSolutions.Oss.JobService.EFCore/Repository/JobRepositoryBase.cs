@@ -12,12 +12,12 @@ namespace DroidSolutions.Oss.JobService.EFCore.Repository;
 /// A base repository to use for job management.
 /// </summary>
 /// <typeparam name="TContext">
-/// The type of the <see cref="DbContext"/> to use. Must implement the <see cref="IJobContext{TParams, TResult}"/> interface.
+/// The type of the <see cref="DbContext"/> to use. Must implement the <see cref="IJobContext"/> interface.
 /// </typeparam>
 /// <typeparam name="TParams">The type of the paramters the job can have.</typeparam>
 /// <typeparam name="TResult">The type of the result the job can have.</typeparam>
 public abstract class JobRepositoryBase<TContext, TParams, TResult> : IJobRepository<TParams, TResult>
-  where TContext : DbContext, IJobContext<TParams, TResult>
+  where TContext : DbContext, IJobContext
   where TParams : class?
   where TResult : class?
 {
@@ -133,7 +133,7 @@ public abstract class JobRepositoryBase<TContext, TParams, TResult> : IJobReposi
   /// <param name="total">The amount of items to process in the scope of this job.</param>
   /// <param name="cancellationToken">A token to cancel the operation.</param>
   /// <returns>A task indicating when the operation is complete.</returns>
-  public async Task SetTotalItemsAsync(IJob<TParams, TResult> job, int total, CancellationToken cancellationToken = default)
+  public async Task SetTotalItemsAsync(IJobBase job, int total, CancellationToken cancellationToken = default)
   {
     job.TotalItems = total;
     job.UpdatedAt = DateTime.UtcNow;
@@ -153,7 +153,7 @@ public abstract class JobRepositoryBase<TContext, TParams, TResult> : IJobReposi
   /// <param name="cancellationToken">A token to cancel the operation.</param>
   /// <returns>A task indicating when the operation is complete.</returns>
   public abstract Task AddProgressAsync(
-    IJob<TParams, TResult> job,
+    IJobBase job,
     int items = 1,
     bool failed = false,
     CancellationToken cancellationToken = default);
@@ -162,13 +162,13 @@ public abstract class JobRepositoryBase<TContext, TParams, TResult> : IJobReposi
   /// Marks the job complete, sets the result and optionally adds a new job.
   /// </summary>
   /// <remarks>
-  /// <p>The given job state is set to <see cref="JobState.Finished"/> and the <see cref="IJob{TParams, TResult}.UpdatedAt"/> property is
+  /// <p>The given job state is set to <see cref="JobState.Finished"/> and the <see cref="IJobBase.UpdatedAt"/> property is
   /// updated. If the <see cref="IJob{TParams, TResult}.Result"/> property is set the result will be serialized and set to the
   /// <see cref="Job{TParams, TResult}.ResultSerialized"/> property.</p>
   /// <p>If <paramref name="addNextJobIn"/> is given a job with the same type will be added. The due date is calculated from the current
   /// time plus the given time.</p>
   /// <p>If a timer with the id of the job exists (which is the case if the job was started via the <see cref="StartJobAsync"/> method)
-  /// the timer is stopped and the <see cref="IJob{TParams, TResult}.ProcessingTimeMs"/> property is set accordingly.</p>
+  /// the timer is stopped and the <see cref="IJobBase.ProcessingTimeMs"/> property is set accordingly.</p>
   /// </remarks>
   /// <param name="job">The job to complete.</param>
   /// <param name="addNextJobIn">An optional timespan when (relative to now) the next job should be run.</param>
@@ -211,8 +211,8 @@ public abstract class JobRepositoryBase<TContext, TParams, TResult> : IJobReposi
   /// Resets a job back to the requested state.
   /// </summary>
   /// <remarks>
-  /// Sets the <see cref="IJob{TParams, TResult}.State"/> property to <see cref="JobState.Requested"/> and the
-  /// <see cref="IJob{TParams, TResult}.Runner"/> property to <see langword="null"/>.
+  /// Sets the <see cref="IJobBase.State"/> property to <see cref="JobState.Requested"/> and the
+  /// <see cref="IJobBase.Runner"/> property to <see langword="null"/>.
   /// </remarks>
   /// <param name="job">The job.</param>
   /// <param name="cancellationToken">A token to cancel the operation.</param>
@@ -255,15 +255,15 @@ public abstract class JobRepositoryBase<TContext, TParams, TResult> : IJobReposi
   /// </summary>
   /// <remarks>
   /// <p>Can be run in a transaction, will call Context.SaveChangesAsync so make sure no unwanted changes exist on the context!.</p>
-  /// <p>The <see cref="IJob{TParams, TResult}.UpdatedAt"/> property is updated and the <see cref="IJob{TParams, TResult}.State"/> property
-  /// is set to <see cref="JobState.Started"/>. Also the <see cref="IJob{TParams, TResult}.Runner"/> property is set to the value given in
+  /// <p>The <see cref="IJobBase.UpdatedAt"/> property is updated and the <see cref="IJobBase.State"/> property
+  /// is set to <see cref="JobState.Started"/>. Also the <see cref="IJobBase.Runner"/> property is set to the value given in
   /// <paramref name="runner"/>.</p>
   /// </remarks>
   /// <param name="job">The job.</param>
   /// <param name="runner">The name of the runner.</param>
   /// <param name="cancellationToken">A token to cancel the operation.</param>
   /// <returns>A task indicating when the operation is complete.</returns>
-  protected async Task StartJobAsync(Job<TParams, TResult>? job, string runner, CancellationToken cancellationToken)
+  protected async Task StartJobAsync(JobBase? job, string runner, CancellationToken cancellationToken)
   {
     if (job != null)
     {

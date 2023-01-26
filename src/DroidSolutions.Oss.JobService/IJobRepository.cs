@@ -3,7 +3,7 @@ using Reinforced.Typings.Attributes;
 namespace DroidSolutions.Oss.JobService;
 
 /// <summary>
-/// A base repository to use for job management.
+/// A base repository to use for generic job management.
 /// </summary>
 /// <typeparam name="TParams">The type of the paramters the job can have.</typeparam>
 /// <typeparam name="TResult">The type of the result the job can have.</typeparam>
@@ -38,12 +38,12 @@ public interface IJobRepository<TParams, TResult>
   /// <param name="cancellationToken">A token to cancel the operation.</param>
   /// <returns>A task indicating when the operation is complete.</returns>
   Task AddProgressAsync(
-    IJob<TParams, TResult> job,
+    IJobBase job,
     int items = 1,
     bool failed = false,
     [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
     CancellationToken cancellationToken = default);
-  
+
   /// <summary>
   /// Counts the jobs in the database optionally filtered by type or state.
   /// </summary>
@@ -52,10 +52,10 @@ public interface IJobRepository<TParams, TResult>
   /// <param name="cancellationToken">A token to cancel the operation.</param>
   /// <returns>The amount of jobs in the database.</returns>
   Task<long> CountJobsAsync(
-      string type,
-      JobState? state = null,
-      [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
-      CancellationToken cancellationToken = default);
+    string type,
+    JobState? state = null,
+    [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
+    CancellationToken cancellationToken = default);
 
   /// <summary>
   /// Checks if a job with the given conditions already exists and returns it if so.
@@ -143,7 +143,7 @@ public interface IJobRepository<TParams, TResult>
   /// <param name="cancellationToken">A token to cancel the operation.</param>
   /// <returns>A task indicating when the operation is complete.</returns>
   Task SetTotalItemsAsync(
-    IJob<TParams, TResult> job,
+    IJobBase job,
     int total,
     [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
     CancellationToken cancellationToken = default);

@@ -169,7 +169,8 @@ public class JobRepositoryBaseTest
 
     await _sut.FinishJobAsync(job, nextJobTime);
 
-    Job<TestParameter, TestResult>? nextJob = await _setup.Context.Jobs.SingleAsync(x => x.Type == type && x.State == JobState.Requested);
+    JobBase? nextJob = await _setup.Context.Jobs
+      .SingleAsync(x => x.Type == type && x.State == JobState.Requested);
     nextJob.DueDate.Should().BeLessThan(10.Seconds()).Before(DateTime.UtcNow.AddMinutes(30));
   }
 
