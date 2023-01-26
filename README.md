@@ -151,14 +151,16 @@ The concrte implementation depens on the kind of database you want to use. There
    }
    ```
 
-4. If you need parameters or job results, register your entities in the `DbContext`:
+4. Register the job entities you need in the `DbContext`, if you don't need parameters and or results, use `object`:
 
    ```cs
    public class TestContext : DbContext, IJobContext
    {
       protected override void OnModelCreating(ModelBuilder modelBuilder)
       {
-        // Register entity with concrete params and result types
+        // Register entity with object for jobs without params and result
+        modelBuilder.Entity<Job<object, object>>();
+        // or register entity with concrete params and result types
         modelBuilder.Entity<Job<TestParameter, TestResult>>();
       }
    }
@@ -280,6 +282,8 @@ The concrte implementation depens on the kind of database you want to use. There
    ```cs
    services.AddHostedService<DeleteVisitorWorker>();
    ```
+
+10. Generate Migration to add or update the Job table.
 
 # Worker
 
