@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import type { IJob } from "./Generated/IJob";
 import type { IJobRepository } from "./Generated/IJobRepository";
 import type { IJobWorkerBase } from "./Generated/Worker/IJobWorkerBase";
+import { IJobWorkerMetrics } from "./Generated/Worker/IJobWorkerMetrics";
 import type { IJobWorkerSettings } from "./Generated/Worker/Settings/IJobWorkerSettings";
 import type { LoggerFactory, SimpleLogger } from "./Helper/LoggerFactory";
 import { EmtpyLogger } from "./Helper/LoggerFactory";
@@ -22,6 +23,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
   private cancellationToken: CancellationToken;
   private executedJobs = 0;
   private lastJobDurationMs = 0;
+  private lastJobFinishTime: Date | undefined;
 
   /**
    * Initializes a new instance of the @see JobWorkerBase class.
@@ -49,10 +51,31 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
    *
    * @returns {Record<string, unknown>} An object with executedJobs and lastJobDurationMs.
    */
-  public getMetrics(): Record<string, unknown> {
+  public getMetrics(): IJobWorkerMetrics {
+    let totalSeconds = 0;
+
+    if (this.settings.addNextJobAfter?.days) {
+      totalSeconds += this.settings.addNextJobAfter.days * 24 * 60 * 60;
+    }
+
+    if (this.settings.addNextJobAfter?.hours) {
+      totalSeconds += this.settings.addNextJobAfter.hours * 60 * 60;
+    }
+
+    if (this.settings.addNextJobAfter?.minutes) {
+      totalSeconds += this.settings.addNextJobAfter.minutes * 60;
+    }
+
+    if (this.settings.addNextJobAfter?.seconds) {
+      totalSeconds += this.settings.addNextJobAfter.seconds;
+    }
+
     return {
+      jobType: this.settings.jobType,
       executedJobs: this.executedJobs,
       lastJobDurationMs: this.lastJobDurationMs,
+      lastJobFinishedAt: this.lastJobFinishTime,
+      jobIntervallSeconds: this.settings.addNextJobAfter ? totalSeconds : undefined,
     };
   }
 
@@ -135,6 +158,8 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
           const endTime = process.hrtime.bigint();
           this.lastJobDurationMs = Number((endTime - startTime) / 1000000n);
         }
+
+        this.lastJobFinishTime = transformDateToUtc();
       }
     }
   }
