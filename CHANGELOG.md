@@ -1,3 +1,11 @@
+# [2.0.0-develop.5](https://github.com/droidsolutions/job-service/compare/v2.0.0-develop.4...v2.0.0-develop.5) (2023-01-31)
+
+
+### Features
+
+* **JobWorkerBase:** add more run metrics ([38c8076](https://github.com/droidsolutions/job-service/commit/38c8076af585955fccc0ff7ebb2187a7884e1f9b))
+* **TS:** export and use IJobWorkerMetrics ([aa49220](https://github.com/droidsolutions/job-service/commit/aa4922083a449d2c9d150ba5b5c036bfb3749f2e))
+
 # [2.0.0-develop.4](https://github.com/droidsolutions/job-service/compare/v2.0.0-develop.3...v2.0.0-develop.4) (2023-01-26)
 
 
