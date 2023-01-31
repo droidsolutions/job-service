@@ -31,6 +31,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   private IJob<TParams, TResult>? _currentJob;
   private int _executedJobs;
   private long _lastJobDurationMs;
+  private DateTime? _lastJobFinishedAt;
 
   /// <summary>
   /// Initializes a new instance of the <see cref="JobWorkerBase{TParams, TResult}"/> class.
@@ -65,6 +66,8 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
     {
       ExecutedJobs = _executedJobs,
       LastJobDurationMs = _lastJobDurationMs,
+      JobIntervallSeconds = (int?)_workerSettings.CurrentValue.AddNextJobAfter?.TotalSeconds,
+      LastJobFinishedAt = _lastJobFinishedAt,
     };
   }
 
@@ -161,6 +164,8 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
         {
           _lastJobDurationMs = stopwtach.ElapsedMilliseconds;
         }
+
+        _lastJobFinishedAt = DateTime.UtcNow;
       }
     }
   }
