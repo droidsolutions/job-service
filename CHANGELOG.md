@@ -1,3 +1,10 @@
+# [2.0.0-develop.6](https://github.com/droidsolutions/job-service/compare/v2.0.0-develop.5...v2.0.0-develop.6) (2023-02-16)
+
+
+### Bug Fixes
+
+* **PostgresJobRepository:** add order by to prevent EF Core warning ([d200309](https://github.com/droidsolutions/job-service/commit/d2003090eedb60bfe431719040057f7365b62860))
+
 # [2.0.0-develop.5](https://github.com/droidsolutions/job-service/compare/v2.0.0-develop.4...v2.0.0-develop.5) (2023-01-31)
 
 
