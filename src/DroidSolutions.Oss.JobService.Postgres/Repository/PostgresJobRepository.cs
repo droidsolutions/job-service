@@ -91,7 +91,7 @@ public class PostgresJobRepository<TContext, TParams, TResult> : JobRepositoryBa
       query = query.Where(x => x.ParametersSerialized != null && EF.Functions.JsonContains(x.ParametersSerialized, jsonString));
     }
 
-    Job<TParams, TResult>? job = await query.FirstOrDefaultAsync(cancellationToken);
+    Job<TParams, TResult>? job = await query.OrderBy(j => j.DueDate).FirstOrDefaultAsync(cancellationToken);
     DeserializeParameters(job);
 
     return job;
@@ -204,7 +204,7 @@ public class PostgresJobRepository<TContext, TParams, TResult> : JobRepositoryBa
           $"select \"{idColumn}\", \"{successColumn}\", \"{failedColumn}\" from \"{table}\" where \"{idColumn}\" = {job.Id} FOR UPDATE")
         .Select(x => new { x.Id, x.FailedItems, x.SuccessfulItems, })
         .AsNoTracking()
-        .FirstOrDefaultAsync(cancellationToken);
+        .SingleOrDefaultAsync(cancellationToken);
 
       if (data == null)
       {
