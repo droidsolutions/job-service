@@ -6,12 +6,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DroidSolutions.Oss.JobService.EFCore.Test.Fixture;
 
-public class TestContext : DbContext, IJobContext<TestParameter, TestResult>
+public class TestContext : DbContext, IJobContext
 {
   public TestContext([NotNull] DbContextOptions options)
     : base(options)
   {
   }
 
-  public DbSet<Job<TestParameter, TestResult>> Jobs { get; set; } = null!;
+  public DbSet<JobBase> Jobs { get; set; } = null!;
+  // public DbSet<Job<TestParameter, TestResult>> Jobs { get; set; } = null!;
+
+  protected override void OnModelCreating(ModelBuilder modelBuilder)
+  {
+    modelBuilder.Entity<Job<TestParameter, TestResult>>();
+  }
 }

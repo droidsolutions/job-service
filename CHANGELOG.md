@@ -1,3 +1,55 @@
+# [2.0.0-develop.6](https://github.com/droidsolutions/job-service/compare/v2.0.0-develop.5...v2.0.0-develop.6) (2023-02-16)
+
+
+### Bug Fixes
+
+* **PostgresJobRepository:** add order by to prevent EF Core warning ([d200309](https://github.com/droidsolutions/job-service/commit/d2003090eedb60bfe431719040057f7365b62860))
+
+# [2.0.0-develop.5](https://github.com/droidsolutions/job-service/compare/v2.0.0-develop.4...v2.0.0-develop.5) (2023-01-31)
+
+
+### Features
+
+* **JobWorkerBase:** add more run metrics ([38c8076](https://github.com/droidsolutions/job-service/commit/38c8076af585955fccc0ff7ebb2187a7884e1f9b))
+* **TS:** export and use IJobWorkerMetrics ([aa49220](https://github.com/droidsolutions/job-service/commit/aa4922083a449d2c9d150ba5b5c036bfb3749f2e))
+
+# [2.0.0-develop.4](https://github.com/droidsolutions/job-service/compare/v2.0.0-develop.3...v2.0.0-develop.4) (2023-01-26)
+
+
+### Bug Fixes
+
+* **PostgresJobRepo:** find table by base entity ([849f09a](https://github.com/droidsolutions/job-service/commit/849f09a52788e6e8323d48d0b982f37cb8109f58))
+
+# [2.0.0-develop.3](https://github.com/droidsolutions/job-service/compare/v2.0.0-develop.2...v2.0.0-develop.3) (2023-01-26)
+
+
+### Features
+
+* add non generic IJobBase and JobBase ([2472960](https://github.com/droidsolutions/job-service/commit/24729609d5bdf6c310f0ca656d78bd6884fd80e0))
+
+# [2.0.0-develop.2](https://github.com/droidsolutions/job-service/compare/v2.0.0-develop.1...v2.0.0-develop.2) (2022-11-03)
+
+
+### Features
+
+* **JobRepository:** add method to count jobs ([05f6475](https://github.com/droidsolutions/job-service/commit/05f64757f874c76ca2a92fa8e1556147c55d2a63))
+
+# [2.0.0-develop.1](https://github.com/droidsolutions/job-service/compare/v1.0.1...v2.0.0-develop.1) (2022-07-05)
+
+
+### Bug Fixes
+
+* prevent add initial job if another is running ([e4b607a](https://github.com/droidsolutions/job-service/commit/e4b607a00881bacc3f68749f2548b06ad71d6eb5))
+
+
+### BREAKING CHANGES
+
+* IJobRepository.FindExistingJobAsync now has an additional parameter includeStarted
+to also find a job that is started.
+
+Fixes a bug where a starting worker would add an initial job while another running worker is
+executing the same job.
+
 # [1.1.0](https://github.com/droidsolutions/job-service/compare/v1.0.1...v1.1.0) (2022-11-03)
 
 

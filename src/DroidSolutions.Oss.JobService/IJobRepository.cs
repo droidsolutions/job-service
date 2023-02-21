@@ -3,7 +3,7 @@ using Reinforced.Typings.Attributes;
 namespace DroidSolutions.Oss.JobService;
 
 /// <summary>
-/// A base repository to use for job management.
+/// A base repository to use for generic job management.
 /// </summary>
 /// <typeparam name="TParams">The type of the paramters the job can have.</typeparam>
 /// <typeparam name="TResult">The type of the result the job can have.</typeparam>
@@ -34,16 +34,16 @@ public interface IJobRepository<TParams, TResult>
   /// </summary>
   /// <param name="job">The job.</param>
   /// <param name="items">The amount of items to add. Defaults to 1.</param>
-  /// <param name="failed">If true, amount is added to failed items instead of successful items.</param>
+  /// <param name="failed">If <see langword="true"/>, amount is added to failed items instead of successful items.</param>
   /// <param name="cancellationToken">A token to cancel the operation.</param>
   /// <returns>A task indicating when the operation is complete.</returns>
   Task AddProgressAsync(
-    IJob<TParams, TResult> job,
+    IJobBase job,
     int items = 1,
     bool failed = false,
     [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
     CancellationToken cancellationToken = default);
-  
+
   /// <summary>
   /// Counts the jobs in the database optionally filtered by type or state.
   /// </summary>
@@ -52,10 +52,10 @@ public interface IJobRepository<TParams, TResult>
   /// <param name="cancellationToken">A token to cancel the operation.</param>
   /// <returns>The amount of jobs in the database.</returns>
   Task<long> CountJobsAsync(
-      string type,
-      JobState? state = null,
-      [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
-      CancellationToken cancellationToken = default);
+    string type,
+    JobState? state = null,
+    [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
+    CancellationToken cancellationToken = default);
 
   /// <summary>
   /// Checks if a job with the given conditions already exists and returns it if so.
@@ -63,6 +63,10 @@ public interface IJobRepository<TParams, TResult>
   /// <param name="type">The type of the job.</param>
   /// <param name="dueDate">The date until when the job should be done.</param>
   /// <param name="parameters">The parameters of the job.</param>
+  /// <param name="includeStarted">
+  /// If <see langword="true"/> job will also be found if state is <see cref="JobState.Started"/>, else only jobs that are
+  /// <see cref="JobState.Requested"/> are found.
+  /// </param>
   /// <param name="cancellationToken">A token to cancel the operation.</param>
   /// <returns>The job if found or null if not.</returns>
   [TsFunction(Type = "Promise<IJob<TParams, TResult> | undefined>")]
@@ -71,6 +75,7 @@ public interface IJobRepository<TParams, TResult>
     [TsParameter(Type = "Date | undefined")]
     DateTime? dueDate,
     TParams? parameters,
+    bool includeStarted = false,
     [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
     CancellationToken cancellationToken = default);
 
@@ -138,7 +143,7 @@ public interface IJobRepository<TParams, TResult>
   /// <param name="cancellationToken">A token to cancel the operation.</param>
   /// <returns>A task indicating when the operation is complete.</returns>
   Task SetTotalItemsAsync(
-    IJob<TParams, TResult> job,
+    IJobBase job,
     int total,
     [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
     CancellationToken cancellationToken = default);

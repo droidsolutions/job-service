@@ -325,6 +325,7 @@ public class JobWorkerBaseTest
         settings.JobType,
         It.IsAny<DateTime>(),
         It.Is<TestParameter>(x => x.NotNullableString == "something"),
+        true,
         It.IsAny<CancellationToken>()))
       .ReturnsAsync(existingJob);
 
@@ -339,10 +340,19 @@ public class JobWorkerBaseTest
     DateTime to = DateTime.UtcNow.AddHours(3);
 
     repoMock.Verify(
-      x => x.AddJobAsync(settings.JobType, It.IsAny<DateTime>(), It.Is<TestParameter>(x => x.NotNullableString == "something"), It.IsAny<CancellationToken>()),
+      x => x.AddJobAsync(
+        settings.JobType,
+        It.IsAny<DateTime>(),
+        It.Is<TestParameter>(x => x.NotNullableString == "something"),
+        It.IsAny<CancellationToken>()),
       Times.Never());
     repoMock.Verify(
-      x => x.FindExistingJobAsync(settings.JobType, It.IsInRange(from, to, Moq.Range.Inclusive), It.Is<TestParameter>(x => x.NotNullableString == "something"), It.IsAny<CancellationToken>()),
+      x => x.FindExistingJobAsync(
+        settings.JobType,
+        It.IsInRange(from, to, Moq.Range.Inclusive),
+        It.Is<TestParameter>(x => x.NotNullableString == "something"),
+        true,
+        It.IsAny<CancellationToken>()),
       Times.Once());
   }
 

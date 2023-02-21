@@ -15,12 +15,12 @@ namespace DroidSolutions.Oss.JobService.Postgres.Repository;
 /// A base repository to use for job management.
 /// </summary>
 /// <typeparam name="TContext">
-/// The type of the <see cref="DbContext"/> to use. Must implement the <see cref="IJobContext{TParams, TResult}"/> interface.
+/// The type of the <see cref="DbContext"/> to use. Must implement the <see cref="IJobContext"/> interface.
 /// </typeparam>
 /// <typeparam name="TParams">The type of the paramters the job can have.</typeparam>
 /// <typeparam name="TResult">The type of the result the job can have.</typeparam>
 public class PostgresJobRepository<TContext, TParams, TResult> : JobRepositoryBase<TContext, TParams, TResult>
-  where TContext : DbContext, IJobContext<TParams, TResult>
+  where TContext : DbContext, IJobContext
   where TParams : class?
   where TResult : class?
 {
@@ -47,6 +47,10 @@ public class PostgresJobRepository<TContext, TParams, TResult> : JobRepositoryBa
   /// <param name="type">The type of the job.</param>
   /// <param name="dueDate">The date when the job should be done.</param>
   /// <param name="parameters">The parameters of the job.</param>
+  /// <param name="includeStarted">
+  /// If <see langword="true"/> job will also be found if state is <see cref="JobState.Started"/>, else only jobs that are
+  /// <see cref="JobState.Requested"/> are found.
+  /// </param>
   /// <param name="cancellationToken">A token to cancel the operation.</param>
   /// <returns>The job if found or <see langword="null"/> if not.</returns>
   /// <throws Exception="InvalidOperationException">
@@ -56,6 +60,7 @@ public class PostgresJobRepository<TContext, TParams, TResult> : JobRepositoryBa
     string type,
     DateTime? dueDate,
     TParams? parameters,
+    bool includeStarted = false,
     CancellationToken cancellationToken = default)
   {
     if (!dueDate.HasValue && parameters == null)
@@ -63,7 +68,16 @@ public class PostgresJobRepository<TContext, TParams, TResult> : JobRepositoryBa
       throw new InvalidOperationException("Either dueDate or parameters must be given to find a job.");
     }
 
-    IQueryable<Job<TParams, TResult>> query = Context.Jobs.Where(x => x.Type == type && x.State == JobState.Requested);
+    IQueryable<Job<TParams, TResult>> query = Context.Jobs.Where(x => x.Type == type).Cast<Job<TParams, TResult>>();
+
+    if (includeStarted)
+    {
+      query = query.Where(x => x.State == JobState.Requested || x.State == JobState.Started);
+    }
+    else
+    {
+      query = query.Where(x => x.State == JobState.Requested);
+    }
 
     if (dueDate.HasValue)
     {
@@ -77,7 +91,7 @@ public class PostgresJobRepository<TContext, TParams, TResult> : JobRepositoryBa
       query = query.Where(x => x.ParametersSerialized != null && EF.Functions.JsonContains(x.ParametersSerialized, jsonString));
     }
 
-    Job<TParams, TResult>? job = await query.FirstOrDefaultAsync(cancellationToken);
+    Job<TParams, TResult>? job = await query.OrderBy(j => j.DueDate).FirstOrDefaultAsync(cancellationToken);
     DeserializeParameters(job);
 
     return job;
@@ -88,10 +102,14 @@ public class PostgresJobRepository<TContext, TParams, TResult> : JobRepositoryBa
   /// oldest due date is grabbed and updated.
   /// </summary>
   /// <remarks>
-  /// <p>The <see cref="IJob{TParams, TResult}.State"/> property is set to <see cref="JobState.Started"/> and the
-  /// <see cref="IJob{TParams, TResult}.UpdatedAt"/> as well as the <see cref="IJob{TParams, TResult}.Runner"/> properties are updated.</p>
-  /// <br/><p>The whole operation runs in an exclusive transaction, the table is locked during the transaction so no other runner can
-  /// execute this operation.</p><br/>
+  /// <p>
+  /// The <see cref="IJobBase.State"/> property is set to <see cref="JobState.Started"/> and the <see cref="IJobBase.UpdatedAt"/> as well
+  /// as the <see cref="IJobBase.Runner"/> properties are updated.
+  /// </p>
+  /// <p>
+  /// The whole operation runs in an exclusive transaction, the table is locked during the transaction so no other runner can execute this
+  /// operation.
+  /// </p>
   /// </remarks>
   /// <param name="type">The type of the job.</param>
   /// <param name="runner">
@@ -123,6 +141,7 @@ public class PostgresJobRepository<TContext, TParams, TResult> : JobRepositoryBa
 
       Job<TParams, TResult>? job = await Context.Jobs
         .OrderBy(x => x.DueDate)
+        .Cast<Job<TParams, TResult>>()
         .FirstOrDefaultAsync(
           x => x.State == JobState.Requested && x.Type == type && x.DueDate <= DateTime.UtcNow,
           cancellationToken);
@@ -157,7 +176,7 @@ public class PostgresJobRepository<TContext, TParams, TResult> : JobRepositoryBa
   /// <param name="cancellationToken">A token to cancel the operation.</param>
   /// <returns>A task indicating when the operation is complete.</returns>
   public override async Task AddProgressAsync(
-    IJob<TParams, TResult> job,
+    IJobBase job,
     int items = 1,
     bool failed = false,
     CancellationToken cancellationToken = default)
@@ -185,7 +204,7 @@ public class PostgresJobRepository<TContext, TParams, TResult> : JobRepositoryBa
           $"select \"{idColumn}\", \"{successColumn}\", \"{failedColumn}\" from \"{table}\" where \"{idColumn}\" = {job.Id} FOR UPDATE")
         .Select(x => new { x.Id, x.FailedItems, x.SuccessfulItems, })
         .AsNoTracking()
-        .FirstOrDefaultAsync(cancellationToken);
+        .SingleOrDefaultAsync(cancellationToken);
 
       if (data == null)
       {
@@ -224,12 +243,12 @@ public class PostgresJobRepository<TContext, TParams, TResult> : JobRepositoryBa
 
   private string GetTableName(out IEntityType entityType)
   {
-    IEntityType? et = Context.Model.FindEntityType(typeof(Job<TParams, TResult>));
+    IEntityType? et = Context.Model.FindEntityType(typeof(JobBase));
     var table = et?.GetSchemaQualifiedTableName();
 
     if (et is null || string.IsNullOrEmpty(table))
     {
-      throw new InvalidOperationException($"Unable to table name from entity {typeof(Job<TParams, TResult>)}.");
+      throw new InvalidOperationException($"Unable to get table name from entity {typeof(JobBase)}.");
     }
 
     entityType = et;
