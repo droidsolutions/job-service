@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/droidsolutions/job-service/compare/v2.1.0...v2.1.1) (2023-04-05)
+
+
+### Bug Fixes
+
+* **NET:** republish for NuGet registry ([ef5151e](https://github.com/droidsolutions/job-service/commit/ef5151e5be740d449b30716c7082f68a826e029b))
+
 # [2.1.0](https://github.com/droidsolutions/job-service/compare/v2.0.0...v2.1.0) (2023-04-05)
 
 
