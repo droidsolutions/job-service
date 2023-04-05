@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/droidsolutions/job-service/compare/v2.0.0...v2.1.0) (2023-04-05)
+
+
+### Features
+
+* update to .NET 7 ([ca8e5c6](https://github.com/droidsolutions/job-service/commit/ca8e5c6431032db3780c76170ef3a7605e966789))
+
 # [2.0.0](https://github.com/droidsolutions/job-service/compare/v1.1.0...v2.0.0) (2023-02-21)
 
 
