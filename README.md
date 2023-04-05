@@ -2,7 +2,7 @@
 
 Library to manage recurring jobs.
 
-The DroidSolutions Job service offers tools that help managing recurring jobs. It is split in multiple packages that are explained below. These contains NuGet packages for .NET 6 as well as an NPM package.
+The DroidSolutions Job service offers tools that help managing recurring jobs. It is split in multiple packages that are explained below. These contains NuGet packages for .NET 7 as well as an NPM package.
 
 Examples of jobs are:
 
