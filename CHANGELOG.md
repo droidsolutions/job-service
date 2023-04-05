@@ -1,3 +1,10 @@
+## [2.1.2](https://github.com/droidsolutions/job-service/compare/v2.1.1...v2.1.2) (2023-04-05)
+
+
+### Bug Fixes
+
+* **NET:** republish to NuGet.org ([8dfbdb5](https://github.com/droidsolutions/job-service/commit/8dfbdb56cc5550e02117c8e47372caf2f84cf026))
+
 ## [2.1.1](https://github.com/droidsolutions/job-service/compare/v2.1.0...v2.1.1) (2023-04-05)
 
 
