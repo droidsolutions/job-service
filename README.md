@@ -279,7 +279,7 @@ The concrte implementation depens on the kind of database you want to use. There
 
 The worker service is a kind of background service that regularily checks if a job should be executed and executes the job with the earliest due date. It can also add a new job after execution thus creating end endless reoccuring job.
 
-The worker is controlled via settings. You can create your own settings that must extend from `JobWorkerSettings` and add your own settings that you need for job processing. But you can also just just the provided settings if you don't need your own. Those settings are explained below.
+The worker is controlled via settings. You can create your own settings class that must extend from `JobWorkerSettings` and add your own properties that you need for job processing. But you can also just just the provided settings if you don't need your own. Those settings are explained below.
 
 ## JobWorkerSettings
 
