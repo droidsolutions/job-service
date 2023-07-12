@@ -13,7 +13,6 @@ import { isCancellationError } from "./Helper/TypeGuards";
 
 /**
  * A base class that allows to implement a job worker.
- *
  * @template TParams The type of the parameter a job has.
  * @template TResult The type of the result of a job.
  */
@@ -27,12 +26,15 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
   /**
    * Initializes a new instance of the @see JobWorkerBase class.
-   *
    * @param {IJobWorkerSettings} settings The job worker settings.
    * @param {IJobRepository<TParams, TResult>} jobRepo An instance of the job repository.
    * @param {LoggerFactory} loggerFactory A factory function that creates an instance of a logger.
    */
-  constructor(protected settings: IJobWorkerSettings, protected jobRepo: IJobRepository<TParams, TResult>, loggerFactory?: LoggerFactory) {
+  constructor(
+    protected settings: IJobWorkerSettings,
+    protected jobRepo: IJobRepository<TParams, TResult>,
+    loggerFactory?: LoggerFactory,
+  ) {
     if (!loggerFactory) {
       loggerFactory = (_, __): SimpleLogger => new EmtpyLogger();
     }
@@ -48,7 +50,6 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
   /**
    * Returns metrics of this worker instance.
-   *
    * @returns {Record<string, unknown>} An object with executedJobs and lastJobDurationMs.
    */
   public getMetrics(): IJobWorkerMetrics {
@@ -104,7 +105,6 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
   /**
    * Should contain the logic needed to handle the job. The promise should resolve to the result of the job.
-   *
    * @param job The job including its paramters.
    * @param cancellationToken A token to cancel the operation.
    * @returns {Promise<TResult>} A promise that contains the result of the job.
@@ -116,7 +116,6 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
    * the oldest due date. Each runs calls @see preJobRunHook @see processJobAsync and @see postJobRunHook . If no job is
    * available @see processJobAsync is not called.
    * To stop the worker use the provided stoppingToken.
-   *
    * @param {CancellationToken} stoppingToken A token that can be used to stop the worker.
    */
   public async executeAsync(stoppingToken: CancellationToken): Promise<void> {
@@ -166,7 +165,6 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
   /**
    * A wrapper around the repository to help set the amount of items the job must process.
-   *
    * @param {number} items The amount of items of the job.
    */
   public async setTotalItemsAsync(items: number): Promise<void> {
@@ -177,7 +175,6 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
   /**
    * A wrapper around the repository to help add progress to the job.
-   *
    * @param {number} amount The amount of progress to add.
    */
   public async addProgressAsync(amount?: number): Promise<void> {
@@ -188,7 +185,6 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
   /**
    * A wrapper around the repository to help add failed progress to the job.
-   *
    * @param {number} amount The amount of failed progress to add.
    */
   public async addFailedProgressAsync(amount?: number): Promise<void> {
@@ -211,7 +207,6 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
   /**
    * A helper function that waits a given amount of time that can be cancelled with a token.
-   *
    * @param {number} seconds The amount of seconds to wait.
    * @param {CancellationToken} cancellationToken A token to cancel the waiting.
    * @returns {Promise<void>} A promise that resolves after the given amount of seconds or rejects when the token is cancelled.
@@ -228,7 +223,6 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
   /**
    * Internal handler for job runs. Is called between pre and post hook for every run through the main loop.
-   *
    * @param {IJobWorkerSettings} settings The worker settings.
    * @param {CancellationToken} cancellationToken The cancellation token.
    * @param {boolean} firstRun If this is the first run.
@@ -280,7 +274,6 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
   /**
    * Internal method to check for available jobs.
-   *
    * @param {IJobRepository<TParams, TResult>} repo The repository.
    * @param {IJobWorkerSettings} settings The settings.
    * @param {CancellationToken} cancellationToken The cancellation token.
