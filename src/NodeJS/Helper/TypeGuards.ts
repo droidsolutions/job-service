@@ -2,7 +2,6 @@ import CancellationToken from "cancellationtoken";
 
 /**
  * Checks if the given object is a CancellationError.
- *
  * @param {any} err Any error.
  * @returns {boolean} true if the given object is a CancellationError.
  */
