@@ -1,4 +1,3 @@
-import CancellationToken from "cancellationtoken";
 import { add, addDays } from "date-fns";
 import { nanoid } from "nanoid";
 import type { IJob } from "./Generated/IJob";
@@ -9,7 +8,6 @@ import type { IJobWorkerSettings } from "./Generated/Worker/Settings/IJobWorkerS
 import type { LoggerFactory, SimpleLogger } from "./Helper/LoggerFactory";
 import { EmtpyLogger } from "./Helper/LoggerFactory";
 import { transformDateToUtc } from "./Helper/TimeHelper";
-import { isCancellationError } from "./Helper/TypeGuards";
 
 /**
  * A base class that allows to implement a job worker.
@@ -19,7 +17,7 @@ import { isCancellationError } from "./Helper/TypeGuards";
 export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<TParams, TResult> {
   private currentJob: IJob<TParams, TResult> | undefined;
   private baseLogger: SimpleLogger;
-  private cancellationToken: CancellationToken;
+  private cancellationToken: AbortSignal;
   private executedJobs = 0;
   private lastJobDurationMs = 0;
   private lastJobFinishTime: Date | undefined;
@@ -109,16 +107,16 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
    * @param cancellationToken A token to cancel the operation.
    * @returns {Promise<TResult>} A promise that contains the result of the job.
    */
-  public abstract processJobAsync(job: IJob<TParams, TResult>, cancellationToken: CancellationToken): Promise<TResult>;
+  public abstract processJobAsync(job: IJob<TParams, TResult>, cancellationToken: AbortSignal): Promise<TResult>;
 
   /**
    * Starts the worker. After a configurable initial delay it will frequently poll for new jobs and take the one with
    * the oldest due date. Each runs calls @see preJobRunHook @see processJobAsync and @see postJobRunHook . If no job is
    * available @see processJobAsync is not called.
    * To stop the worker use the provided stoppingToken.
-   * @param {CancellationToken} stoppingToken A token that can be used to stop the worker.
+   * @param {AbortSignal} stoppingToken A token that can be used to stop the worker.
    */
-  public async executeAsync(stoppingToken: CancellationToken): Promise<void> {
+  public async executeAsync(stoppingToken: AbortSignal): Promise<void> {
     this.cancellationToken = stoppingToken;
     await this.delay(this.settings.initialDelaySeconds, stoppingToken);
 
@@ -133,7 +131,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
       this.settings.jobPollingIntervalSeconds,
     );
 
-    while (!stoppingToken.isCancelled) {
+    while (!stoppingToken.aborted) {
       const executed = false;
       const startTime = process.hrtime.bigint();
       try {
@@ -143,10 +141,10 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
         firstRun = false;
 
-        stoppingToken.throwIfCancelled();
+        stoppingToken.throwIfAborted();
         await this.delay(this.settings.jobPollingIntervalSeconds, stoppingToken);
       } catch (err) {
-        if (isCancellationError(err) || stoppingToken.isCancelled) {
+        if (stoppingToken.aborted) {
           this.baseLogger.info({ runner: this.runnerName }, "Stopped runner %s.", this.runnerName);
           break;
         }
@@ -211,28 +209,29 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
    * @param {CancellationToken} cancellationToken A token to cancel the waiting.
    * @returns {Promise<void>} A promise that resolves after the given amount of seconds or rejects when the token is cancelled.
    */
-  private async delay(seconds: number, cancellationToken: CancellationToken): Promise<void> {
+  private async delay(seconds: number, cancellationToken: AbortSignal): Promise<void> {
     return new Promise((resolve, reject) => {
-      const timeout = setTimeout(resolve, seconds * 1000);
-      cancellationToken.onCancelled((reason?: string) => {
+      const abortHandler = (event: Event) => {
         clearTimeout(timeout);
-        reject(reason);
-      });
+        reject(cancellationToken.reason);
+      };
+
+      cancellationToken.addEventListener("abort", abortHandler);
+      const timeout = setTimeout(() => {
+        cancellationToken.removeEventListener("abort", abortHandler);
+        resolve();
+      }, seconds * 1000);
     });
   }
 
   /**
    * Internal handler for job runs. Is called between pre and post hook for every run through the main loop.
    * @param {IJobWorkerSettings} settings The worker settings.
-   * @param {CancellationToken} cancellationToken The cancellation token.
+   * @param {AbortSignal} cancellationToken The cancellation token.
    * @param {boolean} firstRun If this is the first run.
    * @returns {Promise<boolean>} A promise that resolves to true when a job was executed or false if no job was found or it was resetted.
    */
-  private async handleJobRunAsync(
-    settings: IJobWorkerSettings,
-    cancellationToken: CancellationToken,
-    firstRun?: boolean,
-  ): Promise<boolean> {
+  private async handleJobRunAsync(settings: IJobWorkerSettings, cancellationToken: AbortSignal, firstRun?: boolean): Promise<boolean> {
     let executed = false;
     this.currentJob = await this.getJobAsync(this.jobRepo, settings, cancellationToken);
 
@@ -254,7 +253,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
         await this.jobRepo.resetJobAsync(this.currentJob, cancellationToken);
 
         // re-throw if cancellation error so job loop ends
-        if (isCancellationError(err) || cancellationToken.isCancelled) {
+        if (cancellationToken.aborted) {
           throw err;
         }
       }
@@ -276,18 +275,18 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
    * Internal method to check for available jobs.
    * @param {IJobRepository<TParams, TResult>} repo The repository.
    * @param {IJobWorkerSettings} settings The settings.
-   * @param {CancellationToken} cancellationToken The cancellation token.
+   * @param {AbortSignal} cancellationToken The cancellation token.
    * @returns {Promise<IJob<TParams, TResult> | undefined>} The next due job or undefined if no job is found.
    */
   private async getJobAsync(
     repo: IJobRepository<TParams, TResult>,
     settings: IJobWorkerSettings,
-    cancellationToken: CancellationToken,
+    cancellationToken: AbortSignal,
   ): Promise<IJob<TParams, TResult> | undefined> {
     try {
       return await repo.getAndStartFirstPendingJobAsync(settings.jobType, this.runnerName, cancellationToken);
     } catch (err) {
-      if (isCancellationError(err) || cancellationToken.isCancelled) {
+      if (cancellationToken.aborted) {
         // app is probably shutting down, this is handled in the main loop
         throw err;
       }
@@ -298,7 +297,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     }
   }
 
-  private async addInitialJob(settings: IJobWorkerSettings, cancellationToken: CancellationToken) {
+  private async addInitialJob(settings: IJobWorkerSettings, cancellationToken: AbortSignal) {
     // calculate date until which a job with duedate should exist
     let dueDate = transformDateToUtc();
     if (settings.addNextJobAfter) {

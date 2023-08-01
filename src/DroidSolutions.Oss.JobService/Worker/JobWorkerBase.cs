@@ -18,7 +18,6 @@ namespace DroidSolutions.Oss.JobService.Worker;
 /// <typeparam name="TParams">The type of the parametersa job can have.</typeparam>
 /// <typeparam name="TResult">The type of the result a job can have.</typeparam>
 [TsInterface]
-[TsAddTypeImport(importTarget: "CancellationToken", importSource: "cancellationtoken")]
 public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobWorker
   where TParams : class?
   where TResult : class?
@@ -117,11 +116,11 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   protected abstract Task<TResult?> ProcessJobAsync(
     IJob<TParams, TResult> job,
     [TsIgnore] IServiceScope serviceScope,
-    [TsParameter(Type = "CancellationToken")] CancellationToken cancellationToken);
+    [TsParameter(Type = "AbortSignal")] CancellationToken cancellationToken);
 
   /// <inheritdoc/>
   protected override async Task ExecuteAsync(
-    [TsParameter(Type = "CancellationToken")] CancellationToken stoppingToken)
+    [TsParameter(Type = "AbortSignal")] CancellationToken stoppingToken)
   {
     _stopToken = stoppingToken;
 
