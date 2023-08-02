@@ -10,6 +10,9 @@ updates:
         patterns:
           - "Microsoft.EntityFrameworkCore"
           - "Microsoft.EntityFrameworkCore.*"
+      roslynator:
+        patterns:
+          - "Roslynator.CodeAnalysis.*"
       xunit:
         patterns:
           - "xunit"
