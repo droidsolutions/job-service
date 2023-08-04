@@ -8,6 +8,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
+using NanoidDotNet;
+
 using Reinforced.Typings.Attributes;
 
 namespace DroidSolutions.Oss.JobService.Worker;
@@ -124,7 +126,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   {
     _stopToken = stoppingToken;
 
-    var runnerId = Nanoid.Nanoid.Generate("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 7);
+    var runnerId = Nanoid.Generate("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 7);
     RunnerName = $"{GetRunnerName()}-{runnerId}";
 
     _logger.LogInformation(
