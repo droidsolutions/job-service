@@ -206,12 +206,12 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
   /**
    * A helper function that waits a given amount of time that can be cancelled with a token.
    * @param {number} seconds The amount of seconds to wait.
-   * @param {CancellationToken} cancellationToken A token to cancel the waiting.
+   * @param {AbortSignal} cancellationToken A token to cancel the waiting.
    * @returns {Promise<void>} A promise that resolves after the given amount of seconds or rejects when the token is cancelled.
    */
   private async delay(seconds: number, cancellationToken: AbortSignal): Promise<void> {
     return new Promise((resolve, reject) => {
-      const abortHandler = (event: Event) => {
+      const abortHandler = (_event: Event) => {
         clearTimeout(timeout);
         reject(cancellationToken.reason);
       };
