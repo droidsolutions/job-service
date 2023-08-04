@@ -15,7 +15,7 @@ public class TestOptionsMonitor : IOptionsMonitor<JobWorkerSettings>
 
   public JobWorkerSettings CurrentValue { get; }
 
-  public JobWorkerSettings Get(string name)
+  public JobWorkerSettings Get(string? name)
   {
     return CurrentValue;
   }

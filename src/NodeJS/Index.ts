@@ -7,5 +7,4 @@ export type { IJobWorkerSettings } from "./Generated/Worker/Settings/IJobWorkerS
 export { EmtpyLogger } from "./Helper/LoggerFactory";
 export type { LoggerFactory, SimpleLogger } from "./Helper/LoggerFactory";
 export { transformDateToUtc } from "./Helper/TimeHelper";
-export { isCancellationError } from "./Helper/TypeGuards";
 export { JobWorkerBase } from "./JobWorkerBase";
