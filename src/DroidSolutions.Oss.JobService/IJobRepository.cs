@@ -8,7 +8,6 @@ namespace DroidSolutions.Oss.JobService;
 /// <typeparam name="TParams">The type of the paramters the job can have.</typeparam>
 /// <typeparam name="TResult">The type of the result the job can have.</typeparam>
 [TsInterface]
-[TsAddTypeImport(importTarget: "CancellationToken", importSource: "cancellationtoken")]
 public interface IJobRepository<TParams, TResult>
   where TParams : class?
   where TResult : class?
@@ -26,7 +25,7 @@ public interface IJobRepository<TParams, TResult>
     [TsParameter(Type = "Date | undefined")]
     DateTime? dueDate = null,
     TParams? parameters = null,
-    [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
+    [TsParameter(Type = "AbortSignal", DefaultValue = "undefined")]
     CancellationToken cancellationToken = default);
 
   /// <summary>
@@ -41,7 +40,7 @@ public interface IJobRepository<TParams, TResult>
     IJobBase job,
     int items = 1,
     bool failed = false,
-    [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
+    [TsParameter(Type = "AbortSignal", DefaultValue = "undefined")]
     CancellationToken cancellationToken = default);
 
   /// <summary>
@@ -54,7 +53,7 @@ public interface IJobRepository<TParams, TResult>
   Task<long> CountJobsAsync(
     string type,
     JobState? state = null,
-    [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
+    [TsParameter(Type = "AbortSignal", DefaultValue = "undefined")]
     CancellationToken cancellationToken = default);
 
   /// <summary>
@@ -76,7 +75,7 @@ public interface IJobRepository<TParams, TResult>
     DateTime? dueDate,
     TParams? parameters,
     bool includeStarted = false,
-    [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
+    [TsParameter(Type = "AbortSignal", DefaultValue = "undefined")]
     CancellationToken cancellationToken = default);
 
   /// <summary>
@@ -96,7 +95,7 @@ public interface IJobRepository<TParams, TResult>
     IJob<TParams, TResult> job,
     [TsParameter(Type = "{ days?: number; hours?: number; minutes?: number; seconds?: number } | undefined")]
     TimeSpan? addNextJobIn = null,
-    [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
+    [TsParameter(Type = "AbortSignal", DefaultValue = "undefined")]
     CancellationToken cancellationToken = default);
 
   /// <summary>
@@ -121,7 +120,7 @@ public interface IJobRepository<TParams, TResult>
   Task<IJob<TParams, TResult>?> GetAndStartFirstPendingJobAsync(
     string type,
     string runner,
-    [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
+    [TsParameter(Type = "AbortSignal", DefaultValue = "undefined")]
     CancellationToken cancellationToken = default);
 
   /// <summary>
@@ -132,7 +131,7 @@ public interface IJobRepository<TParams, TResult>
   /// <returns>A task indicating when the operation is complete.</returns>
   Task ResetJobAsync(
     IJob<TParams, TResult> job,
-    [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
+    [TsParameter(Type = "AbortSignal", DefaultValue = "undefined")]
     CancellationToken cancellationToken = default);
 
   /// <summary>
@@ -145,6 +144,6 @@ public interface IJobRepository<TParams, TResult>
   Task SetTotalItemsAsync(
     IJobBase job,
     int total,
-    [TsParameter(Type = "CancellationToken", DefaultValue = "undefined")]
+    [TsParameter(Type = "AbortSignal", DefaultValue = "undefined")]
     CancellationToken cancellationToken = default);
 }

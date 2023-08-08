@@ -123,6 +123,8 @@ The extended worker class can be added as a [hosted service](https://docs.micros
 
 The `PreJobRunHook` is called when a new run is executed. At this time the worker has not checked if a job is available and therefore no job exists yet. This hook can be used to set up a logger, correlation id or Sentry transactions, though it is not guarenteed that a job is available.
 
+**Note** The `JobWorkerBase` uses the [NanoId](https://github.com/codeyu/nanoid-net) package. Up until version 2.1.2 of this package NanoId 2.1.0 was used. In 3.0.0 NanoId changed the general namespace which can lead to incompatibilities. Since version 3.0.0 of the `DroidSolutions.Oss.JobService` package NanoId 3.0.0 is used. If you don't use the NanoId package yourself, this should not be a problem, but if you use a different version of NanoId there can be problems.
+
 ### NodeJS specifics
 
 The TypeScript side has an abstract `JobWorkerBase` class that can be used as the basis of a worker implementation. For this you'll need a concrete implementation of the IJobRepository interface and pass it along with settings to the constructor. You'll then have to implement the abstract methods and you'll should be good to go.
@@ -133,7 +135,7 @@ The following is a detailed guide on how to use this library for either ASP.NET 
 
 ## ASP.NET Core
 
-The concrte implementation depens on the kind of database you want to use. There are already implementations for Entity Framework Core and PostgreSQL for which the following guide is specific to.
+The concrete implementation depends on the kind of database you want to use. There are already implementations for Entity Framework Core and PostgreSQL for which the following guide is specific to.
 
 1. Add the `DroidSolutions.Oss.JobService`, `DroidSolutions.Oss.JobService.EFCore` and `DroidSolutions.Oss.JobService.Postgres` packages as well as references to `Microsoft.EntityFrameworkCore` and `Npgsql.EntityFrameworkCore.PostgreSQL`.
 2. Create types for your job parameters and result. If you don't need one or both of them you can use `object?`.
@@ -165,7 +167,6 @@ The concrte implementation depens on the kind of database you want to use. There
       }
    }
    ```
-  
 
 5. If you want to share the database with services in other languages (such as NodeJS) or generally want to have the `JobState` enum as a text column you can use the `JobStateToDescriptionConverter` by adding it in the `OnConfiguring` method of the db context.
 
@@ -269,11 +270,160 @@ The concrte implementation depens on the kind of database you want to use. There
    - The `ProcessJobAsync` method is where you put your logic to actually process the job. it is only called when a job to execute exists and contains the job, a service scope for this execution and a CancellationToken. If your job has a result you should return it from this method.
 
 9. Add your worker as a hosted service.
+
    ```cs
    services.AddHostedService<DeleteVisitorWorker>();
    ```
 
 10. Generate Migration to add or update the Job table.
+
+## NodeJS
+
+The worker service can be used in JavaScript/TypeScript projects.
+
+1. Install the package
+
+   ```bash
+   npm install @droidsolutions-oss/job-service
+   ```
+
+2. Create an implementation of the `IJobRepository<TParams, TResult>` interface. If you are using TypeORM you can use the `@droidsolutions-oss/job-service-typeorm` package which already comes with an implemantation of the interface. Otherwise you can implement it with the database layer of your choice. In TypeScript it would look like this (note [Prisma](prisma.io) is used in this example):
+
+   ```ts
+   import { IJob, IJobRepository, JobState } from "@droidsolutions-oss/job-service";
+   import { Prisma, PrismaClient } from "@prisma/client";
+
+   // Note: if you only need one type of job you can also use the type directly instead of a generic here
+   export class JobRepository<TParams, TResult> implements IJobRepository<TParams, TResult> {
+     constructor(private readonly client: PrismaClient) {}
+
+     public async addJobAsync(
+       type: string,
+       dueDate?: Date,
+       parameters?: TParams,
+       cancellationToken?: AbortSignal,
+     ): Promise<IJob<TParams, TResult>> {
+       cancellationToken?.throwIfAborted();
+
+       // create a new job
+       const job = await this.client.job.create({
+         data: {
+           dueDate: dueDate ?? new Date(),
+           parameters: parameters as Prisma.JsonObject,
+           state: JobState.Requested,
+           type,
+         },
+       });
+
+       // save the job to the database, reload it and then return it with the new id
+
+       return job;
+     }
+
+     // Implement the other methods from the interface
+   }
+   ```
+
+3. Optional if you need custom settings create your own settings interface that extends from `IJobWorkerSettings`.
+
+   ```ts
+   import { IJobWorkerSettings } from "@droidsolutions-oss/job-service";
+
+   export interface MyWorkerSettings extends IJobWorkerSettings {
+     checkInput: boolean;
+   }
+   ```
+
+4. Create your worker, extending from `JobWorkerBase<TParams, TResult>`.
+
+   ```ts
+   import { IJob, JobWorkerBase, LoggerFactory } from "@droidsolutions-oss/job-service";
+   import { JobRepository } from "../repository/JobRepository";
+   import { MyWorkerSettings } from "../dto/MyWorkerSettings";
+
+   export interface ExampleResult {
+     errors?: string[];
+   }
+
+   export class ExampleWorker extends JobWorkerBase<string[], ExampleResult> {
+     constructor(
+       settings: MyWorkerSettings,
+       jobRepo: JobRepository<string[], ExampleResult>,
+       loggerFactory?: LoggerFactory,
+       private readonly appVersion: string,
+     ) {
+       super(settings, jobRepo, loggerFactory);
+     }
+
+     public getRunnerName(): string {
+      // Use host name and the current application version, JobWorkerBase will append a random string to it
+       return `${process.env.HOSTNAME}-v${this.appVersion}`;
+     }
+
+     public getInitialJobParameters(): string[] | undefined {
+       return undefined;
+     }
+     
+     public preJobRunHook(): void {
+       // Optional: run any things you want before each job run.
+       // This will be executed before checking if there is a job to execute
+     }
+
+     public postJobRunHook(): void {
+       // Optional: run any things for cleanup
+       // This will be executed after each job, even if there was no job to execute
+     }
+
+     public async processJobAsync(job: IJob<string[], ExampleResult>, cancellationToken: AbortSignal): Promise<ExampleResult> {
+       // You can safely throw here, it will be catched by JobWorkerBase
+       cancellationToken.throwIfAborted();
+       const result: ExampleResult = {
+         errors: [];
+       }
+
+       for (const input of job.parameters)
+       {
+         if (cancellationToken.aborted) {
+           break;
+         }
+         
+         try {
+           // Do you job handling here
+         } catch (err) {
+           result.errors.push[`Error handling input ${input}: err.message`];
+         }
+       }
+
+       return result;
+     }
+   }
+   ```
+
+5. Let your application initialize the worker.
+
+   ```ts
+   import { Prisma, PrismaClient } from "@prisma/client";
+   import { MyWorkerSettings } from "./dto/MyWorkerSettings";
+   import { JobRepository } from "./repository/JobRepository";
+   import { ExampleResult, ExampleWorker } from "./worker/ExampleWorker";
+
+   const prismaClient = new PrismaClient();
+   const exampleRepo = new JobRepository<string[], ExampleResult>>(prismaClient);
+   const settings: MyWorkerSettings = {
+     addInitialJob: true, // Create a job if none exists
+     addNextJobAfter: { hours: 1 }, // Repeat job every hour
+     jobType: "my-example-job",
+     checkInput: true
+   };
+   const abortController = new AbortController();
+   
+   const worker = new ExampleWorker(settings, exampleRepo, undefined); // Optional provide a logger factory
+   const executePromise = worker.executeAsync(abortController.signal);
+   
+   // When you want to stop the worker (e.g. shutting down the app) use the controller to abort
+   abortController.abort(new Error("App is shutting down"));
+   await executePromise; // Promise will resolve once the worker finished processing the current job or reset it if cancellationToken.throwIfAborted(); was used
+   ```
 
 # Worker
 
