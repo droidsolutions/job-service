@@ -4,7 +4,7 @@ updates:
   - assignees:
       - "kampfmoehre"
     commit-message:
-      prefix-development: "chore"
+      prefix: "chore"
     groups:
       ef-core:
         patterns:
