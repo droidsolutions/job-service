@@ -1,3 +1,27 @@
+# [3.0.0](https://github.com/droidsolutions/job-service/compare/v2.1.2...v3.0.0) (2023-08-08)
+
+
+### Bug Fixes
+
+* **deps:** Update NanoID to v3 ([eb77ee6](https://github.com/droidsolutions/job-service/commit/eb77ee62b996ae484309d696a1e57998888141a5))
+* **net:** Update NanoId to 3.0.0 ([f17ac88](https://github.com/droidsolutions/job-service/commit/f17ac88536452050c6b5a3f7f0db54b9ea6419da))
+
+
+### Features
+
+* **Node:** add IJobBase to export ([fafbc75](https://github.com/droidsolutions/job-service/commit/fafbc75b56beb95ea45d53580c0cf543542dd3f3))
+* **NodeJS:** replace cancellationtoken with AbortSignal ([dce496d](https://github.com/droidsolutions/job-service/commit/dce496dc1c4fdeb83159b1125bd0cde7e5570bd1))
+
+
+### BREAKING CHANGES
+
+* **net:** NanoID 3.0.0 comes with changed namespace which can lead to problems when using
+another version along with this package.
+* **NodeJS:** JobWorkerBase.executeAsync, processJobAsync and IJobRepository methods now receive
+an AbortSignal which is native to NodeJS since 15 instead of the cancellationtoken.
+Remove cancellationToken peer dependency, in favor of NodeJS AbortSignal
+* **NodeJS:** removed isCancellationError function
+
 # [3.0.0-develop.2](https://github.com/droidsolutions/job-service/compare/v3.0.0-develop.1...v3.0.0-develop.2) (2023-08-08)
 
 
