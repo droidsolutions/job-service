@@ -123,6 +123,8 @@ The extended worker class can be added as a [hosted service](https://docs.micros
 
 The `PreJobRunHook` is called when a new run is executed. At this time the worker has not checked if a job is available and therefore no job exists yet. This hook can be used to set up a logger, correlation id or Sentry transactions, though it is not guarenteed that a job is available.
 
+**Note** The `JobWorkerBase` uses the [NanoId](https://github.com/codeyu/nanoid-net) package. Up until vwersion 2.1.2 of this package NanoId 2.1.0 was used. In 3.0.0 NanoId changed the general namespace whic hcan lead to incompatibilities. Since version 3.0.0 of the `DroidSolutions.Oss.JobService` package NanoId 3.0.0 is used. If you don't use the NanoId package yourself, this should not be a problem, but if you use a different version of NanoId there can be problems.
+
 ### NodeJS specifics
 
 The TypeScript side has an abstract `JobWorkerBase` class that can be used as the basis of a worker implementation. For this you'll need a concrete implementation of the IJobRepository interface and pass it along with settings to the constructor. You'll then have to implement the abstract methods and you'll should be good to go.
