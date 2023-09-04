@@ -12,7 +12,7 @@ updates:
           - "Microsoft.EntityFrameworkCore.*"
       roslynator:
         patterns:
-          - "Roslynator.CodeAnalysis.*"
+          - "Roslynator.*"
       xunit:
         patterns:
           - "xunit"
