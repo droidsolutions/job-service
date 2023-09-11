@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v3.2.0
         with:
           dotnet-version: "7.0.x"
@@ -44,7 +44,7 @@ jobs:
         ports:
           - 5432:5432
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: dotnet test /p:CollectCoverage=true
       - name: publish coverage report to coveralls.io
         uses: coverallsapp/github-action@v2.2.3
@@ -61,7 +61,7 @@ jobs:
       - coverage
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
