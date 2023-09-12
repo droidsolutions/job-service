@@ -1,3 +1,10 @@
+## [3.0.1](https://github.com/droidsolutions/job-service/compare/v3.0.0...v3.0.1) (2023-09-12)
+
+
+### Bug Fixes
+
+* **NodeJS:** use new Date for initial jobs ([77aa178](https://github.com/droidsolutions/job-service/commit/77aa1784b61806b73548f6e38a69edb7df4ce199))
+
 # [3.0.0](https://github.com/droidsolutions/job-service/compare/v2.1.2...v3.0.0) (2023-08-08)
 
 
