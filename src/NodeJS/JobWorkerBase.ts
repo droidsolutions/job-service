@@ -7,7 +7,6 @@ import { IJobWorkerMetrics } from "./Generated/Worker/IJobWorkerMetrics";
 import type { IJobWorkerSettings } from "./Generated/Worker/Settings/IJobWorkerSettings";
 import type { LoggerFactory, SimpleLogger } from "./Helper/LoggerFactory";
 import { EmtpyLogger } from "./Helper/LoggerFactory";
-import { transformDateToUtc } from "./Helper/TimeHelper";
 
 /**
  * A base class that allows to implement a job worker.
@@ -156,7 +155,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
           this.lastJobDurationMs = Number((endTime - startTime) / 1000000n);
         }
 
-        this.lastJobFinishTime = transformDateToUtc();
+        this.lastJobFinishTime = new Date();
       }
     }
   }
@@ -299,7 +298,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
   private async addInitialJob(settings: IJobWorkerSettings, cancellationToken: AbortSignal) {
     // calculate date until which a job with duedate should exist
-    let dueDate = transformDateToUtc();
+    let dueDate = new Date();
     if (settings.addNextJobAfter) {
       // use intervall between jobs as limit
       dueDate = add(dueDate, settings.addNextJobAfter);
