@@ -55,7 +55,7 @@
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-prettier": "5.0.1",
     "husky": "8.0.3",
-    "semantic-release": "22.0.6",
+    "semantic-release": "22.0.7",
     "typescript": "5.2.2"
   },
   "commitlint": {
