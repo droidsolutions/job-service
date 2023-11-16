@@ -6,6 +6,9 @@ updates:
     commit-message:
       prefix: "chore"
     groups:
+      dotnet:
+        patterns:
+          - "Microsoft.Extensions.*"
       ef-core:
         patterns:
           - "Microsoft.EntityFrameworkCore"
