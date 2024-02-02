@@ -1,3 +1,15 @@
+# [3.1.0](https://github.com/droidsolutions/job-service/compare/v3.0.1...v3.1.0) (2024-02-02)
+
+
+### Bug Fixes
+
+* **Net:** unify JobId and JobType in logs ([2143939](https://github.com/droidsolutions/job-service/commit/2143939e9b44e88328643e4634fcf3511f286ebc))
+
+
+### Features
+
+* **Net:** Update to .NET 8 ([056f8d9](https://github.com/droidsolutions/job-service/commit/056f8d997699a2b60b020b7cbad088ca5080b6ba))
+
 ## [3.0.1](https://github.com/droidsolutions/job-service/compare/v3.0.0...v3.0.1) (2023-09-12)
 
 
