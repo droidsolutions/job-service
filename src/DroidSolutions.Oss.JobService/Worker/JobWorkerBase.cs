@@ -351,7 +351,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
     if (existingJob != null)
     {
       _logger.LogInformation(
-        "Found existing job {JobId} due {DueDate}, skip adding initial job.",
+        "Found existing job {ExistingJobId} due {DueDate}, skip adding initial job.",
         existingJob.Id,
         existingJob.DueDate);
     }

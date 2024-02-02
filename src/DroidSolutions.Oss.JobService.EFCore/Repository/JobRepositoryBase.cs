@@ -81,7 +81,7 @@ public abstract class JobRepositoryBase<TContext, TParams, TResult> : IJobReposi
 
     await Context.SaveChangesAsync(cancellationToken);
 
-    Logger.LogInformation("Added job {JobId} with type {Type} due {Due}.", job.Id, job.Type, job.DueDate);
+    Logger.LogInformation("Added job {NewJobId} with type {JobType} due {Due}.", job.Id, job.Type, job.DueDate);
 
     return job;
   }
@@ -278,7 +278,7 @@ public abstract class JobRepositoryBase<TContext, TParams, TResult> : IJobReposi
 
       await Context.SaveChangesAsync(cancellationToken);
 
-      Logger.LogInformation("Starting job {JobId} with type {jobType} on runner {Runner}.", job.Id, job.Type, runner);
+      Logger.LogInformation("Starting job {JobId} with type {JobType} on runner {Runner}.", job.Id, job.Type, runner);
     }
   }
 
