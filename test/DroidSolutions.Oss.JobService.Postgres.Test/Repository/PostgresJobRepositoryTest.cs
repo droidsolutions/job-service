@@ -291,4 +291,72 @@ public class PostgresJobRepositoryTest
     job.FailedItems.Should().Be(2);
     job.SuccessfulItems.Should().BeNull();
   }
+
+  // Should be on JobRepositoryBaseTests but those run with in memory db and ExecuteDeleteAsync is not implemented
+  [Fact]
+  public async Task DeleteJobsAsync_ShouldDeleteOnlyJobsWithGivenType()
+  {
+    string deleteType = "delete-jobs";
+    Job<TestParameter, TestResult> job1 = new() { State = JobState.Finished, Type = deleteType, };
+    Job<TestParameter, TestResult> job2 = new() { State = JobState.Finished, Type = deleteType, };
+    Job<TestParameter, TestResult> job3 = new() { State = JobState.Finished, Type = "non-delete-job", };
+    _setup.Context.Jobs.AddRange(new[] { job1, job2, job3 });
+    await _setup.Context.SaveChangesAsync();
+
+    await _sut.DeleteJobsAsync(deleteType, null, null, default);
+
+    long count = await _sut.CountJobsAsync(deleteType);
+    count.Should().Be(0);
+
+    count = await _sut.CountJobsAsync("non-delete-job");
+    count.Should().Be(1);
+  }
+
+  // Should be on JobRepositoryBaseTests but those run with in memory db and ExecuteDeleteAsync is not implemented
+  [Fact]
+  public async Task DeleteJobsAsync_ShouldDeleteOnlyJobsWithGivenState()
+  {
+    string deleteType = "delete-jobs";
+    Job<TestParameter, TestResult> job1 = new() { State = JobState.Finished, Type = deleteType, };
+    Job<TestParameter, TestResult> job2 = new() { State = JobState.Started, Type = deleteType, };
+    Job<TestParameter, TestResult> job3 = new() { State = JobState.Requested, Type = deleteType, };
+    _setup.Context.Jobs.AddRange(new[] { job1, job2, job3 });
+    await _setup.Context.SaveChangesAsync();
+
+    await _sut.DeleteJobsAsync(deleteType, JobState.Finished, null, default);
+
+    long count = await _sut.CountJobsAsync(deleteType);
+    count.Should().Be(2);
+  }
+
+  // Should be on JobRepositoryBaseTests but those run with in memory db and ExecuteDeleteAsync is not implemented
+  [Fact]
+  public async Task DeleteJobsAsync_ShouldDeleteOnlyJobsOlderThenGivenDate()
+  {
+    string deleteType = "delete-jobs";
+    DateTime refDate = new(2024, 2, 6, 15, 37, 0, DateTimeKind.Utc);
+    Job<TestParameter, TestResult> job1 = new()
+    {
+      State = JobState.Finished,
+      Type = deleteType,
+      UpdatedAt = refDate.AddHours(-12),
+    };
+    Job<TestParameter, TestResult> job2 = new() {
+      State = JobState.Finished,
+      Type = deleteType,
+      UpdatedAt = refDate.AddHours(-24),
+    };
+    Job<TestParameter, TestResult> job3 = new()
+    {
+      State = JobState.Requested,
+      Type = deleteType,
+      UpdatedAt = refDate.AddHours(-24),
+    };
+    _setup.Context.Jobs.AddRange(new[] { job1, job2, job3 });
+    await _setup.Context.SaveChangesAsync();
+
+    int result = await _sut.DeleteJobsAsync(deleteType, JobState.Finished, refDate.AddHours(-18), default);
+    
+    result.Should().Be(1);
+  }
 }

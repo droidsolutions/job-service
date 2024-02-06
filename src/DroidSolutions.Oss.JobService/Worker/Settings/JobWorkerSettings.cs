@@ -64,4 +64,10 @@ public class JobWorkerSettings
   /// the db.
   /// </summary>
   public bool AddInitialJob { get; set; }
+
+  /// <summary>
+  /// Gets or sets a value indicating whether the worker should delete jobs that are older than the given timespan.
+  /// </summary>
+  [TsProperty(Type = "{ days?: number; hours?: number; minutes?: number; seconds?: number }")]
+  public TimeSpan? DeleteJobsOlderThan { get; set; }
 }

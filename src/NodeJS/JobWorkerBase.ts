@@ -1,7 +1,8 @@
-import { add, addDays } from "date-fns";
+import { add, addDays, sub } from "date-fns";
 import { nanoid } from "nanoid";
 import type { IJob } from "./Generated/IJob";
 import type { IJobRepository } from "./Generated/IJobRepository";
+import { JobState } from "./Generated/JobState";
 import type { IJobWorkerBase } from "./Generated/Worker/IJobWorkerBase";
 import { IJobWorkerMetrics } from "./Generated/Worker/IJobWorkerMetrics";
 import type { IJobWorkerSettings } from "./Generated/Worker/Settings/IJobWorkerSettings";
@@ -20,6 +21,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
   private executedJobs = 0;
   private lastJobDurationMs = 0;
   private lastJobFinishTime: Date | undefined;
+  private lastJobDeleteTime: Date | undefined;
 
   /**
    * Initializes a new instance of the @see JobWorkerBase class.
@@ -265,6 +267,10 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
       }
     }
 
+    if (this.settings.deleteJobsOlderThan) {
+      await this.deleteOldJobs(this.settings.jobType, this.settings.deleteJobsOlderThan, cancellationToken);
+    }
+
     this.currentJob = undefined;
 
     return executed;
@@ -317,6 +323,25 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
       // create a new job if none exists that is due until the calculated time
       await this.jobRepo.addJobAsync(settings.jobType, dueDate, params, cancellationToken);
+    }
+  }
+
+  private async deleteOldJobs(
+    jobType: string,
+    olderThan: { days?: number; hours?: number; minutes?: number; seconds?: number },
+    cancellationToken: AbortSignal,
+  ) {
+    const current = new Date();
+    if (this.lastJobDeleteTime && sub(current, olderThan) > this.lastJobDeleteTime) {
+      return;
+    }
+
+    const deleteBefore = sub(current, olderThan);
+    const deleted = await this.jobRepo.deleteJobsAsync(jobType, JobState.Finished, deleteBefore, cancellationToken);
+    this.lastJobDeleteTime = current;
+
+    if (deleted > 0) {
+      this.baseLogger.info("Deleted %d old jobs of type %s.", deleted, jobType);
     }
   }
 }

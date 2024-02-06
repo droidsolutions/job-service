@@ -234,11 +234,19 @@ public class JobRepositoryBaseTest
     var job1 = new Job<TestParameter, TestResult> { State = JobState.Finished, Type = "count-jobs", };
     var job2 = new Job<TestParameter, TestResult> { State = JobState.Started, Type = "count-jobs", };
     var job3 = new Job<TestParameter, TestResult> { State = JobState.Requested, Type = "count-jobs", };
-    _setup.Context.Jobs.AddRange(new [] { job1, job2, job3 });
+    _setup.Context.Jobs.AddRange(new[] { job1, job2, job3 });
     await _setup.Context.SaveChangesAsync();
 
     long count = await _sut.CountJobsAsync("count-jobs", JobState.Started);
 
     count.Should().Be(1);
+  }
+
+  [Fact]
+  public async Task DeleteJobsAsync_ShouldThrow_WhenNoFilterGiven()
+  {
+    Func<Task> act = async () => await _sut.DeleteJobsAsync(string.Empty, null, null, default);
+
+    await act.Should().ThrowAsync<ArgumentException>();
   }
 }

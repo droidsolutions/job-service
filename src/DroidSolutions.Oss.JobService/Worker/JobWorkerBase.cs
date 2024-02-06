@@ -33,6 +33,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   private int _executedJobs;
   private long _lastJobDurationMs;
   private DateTime? _lastJobFinishedAt;
+  private DateTime? _lastDeletedAt;
 
   /// <summary>
   /// Initializes a new instance of the <see cref="JobWorkerBase{TParams, TResult}"/> class.
@@ -140,8 +141,8 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
 
     while (!stoppingToken.IsCancellationRequested)
     {
-      var stopwtach = new Stopwatch();
-      stopwtach.Start();
+      Stopwatch stopwatch = new();
+      stopwatch.Start();
       var executed = false;
       try
       {
@@ -160,10 +161,10 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
       }
       finally
       {
-        stopwtach.Stop();
+        stopwatch.Stop();
         if (executed)
         {
-          _lastJobDurationMs = stopwtach.ElapsedMilliseconds;
+          _lastJobDurationMs = stopwatch.ElapsedMilliseconds;
         }
 
         _lastJobFinishedAt = DateTime.UtcNow;
@@ -265,8 +266,21 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
       await AddInitialJob(settings, cancellationToken);
     }
 
-    _jobRepository = null;
     _currentJob = null;
+
+    if (settings.DeleteJobsOlderThan.HasValue)
+    {
+      try
+      {
+        await DeleteOldJobs(settings.DeleteJobsOlderThan.Value, settings.JobType, cancellationToken);
+      }
+      catch (Exception ex)
+      {
+        _logger.LogError(ex, "Error deleting old jobs: {Message}", ex.Message);
+      }
+    }
+
+    _jobRepository = null;
 
     return executed;
   }
@@ -280,9 +294,9 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   /// <returns>The first applicable job or null if no job is applicable.</returns>
   [TsIgnore]
   private async Task<IJob<TParams, TResult>?> GetJobAsync(
-    IJobRepository<TParams, TResult> repo,
-    JobWorkerSettings settings,
-    CancellationToken cancellationToken)
+  IJobRepository<TParams, TResult> repo,
+  JobWorkerSettings settings,
+  CancellationToken cancellationToken)
   {
     try
     {
@@ -359,6 +373,33 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
     {
       // create a new job since none exist that is due until the calculated time
       await _jobRepository.AddJobAsync(settings.JobType, dueDate, parameters, cancellationToken);
+    }
+  }
+
+  [TsIgnore]
+  private async Task DeleteOldJobs(TimeSpan deleteOlderThan, string jobType, CancellationToken cancellationToken)
+  {
+    DateTime now = DateTime.UtcNow;
+
+    // only delete once a day to prevent unneeded db calls on jobs with short intervals
+    if (_lastDeletedAt.HasValue && now.Subtract(TimeSpan.FromHours(24)) >= _lastDeletedAt.Value)
+    {
+      return;
+    }
+
+    CheckJobRepo();
+
+    DateTime deleteBefore = now.Subtract(deleteOlderThan);
+    int deleted = await _jobRepository.DeleteJobsAsync(jobType, JobState.Finished, deleteBefore, cancellationToken);
+    _lastDeletedAt = DateTime.UtcNow;
+
+    if (deleted > 0)
+    {
+      _logger.LogInformation(
+        "Deleted {Deleted} jobs of type {JobType} that were finished before {DeleteBefore}.",
+        deleted,
+        jobType,
+        deleteBefore);
     }
   }
 }

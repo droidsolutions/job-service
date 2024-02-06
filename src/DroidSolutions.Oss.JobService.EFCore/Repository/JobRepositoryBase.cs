@@ -108,6 +108,43 @@ public abstract class JobRepositoryBase<TContext, TParams, TResult> : IJobReposi
     bool includeStarted = false,
     CancellationToken cancellationToken = default);
 
+  /// <inheritdoc/>
+  public async Task<int> DeleteJobsAsync(
+    string type,
+    JobState? state = null,
+    DateTime? lastUpdatedBefore = null,
+    CancellationToken cancellationToken = default)
+  {
+    IQueryable<JobBase> query = Context.Jobs.AsQueryable();
+    bool hasFilter = false;
+
+    if (!string.IsNullOrEmpty(type))
+    {
+      query = query.Where(j => j.Type == type);
+      hasFilter = true;
+    }
+
+    if (state.HasValue)
+    {
+      query = query.Where(j => j.State == state.Value);
+      hasFilter = true;
+    }
+
+    if (lastUpdatedBefore.HasValue)
+    {
+      query = query.Where(j => j.UpdatedAt < lastUpdatedBefore.Value);
+      hasFilter = true;
+    }
+
+    if (!hasFilter)
+    {
+      throw new ArgumentException("At least one filter must be given to delete jobs.");
+    }
+
+    // Remove without loading them first
+    return await query.ExecuteDeleteAsync(cancellationToken);
+  }
+
   /// <summary>
   /// Should check the jobs table for a job that is requested for which the given due date is in the past and the given type matches. If any
   /// exists the one with the oldest due date should be grabbed and updated. The state should be set to <see cref="JobState.Started"/>. If

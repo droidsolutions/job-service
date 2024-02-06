@@ -470,3 +470,25 @@ Leave this empty if you want a one time job (or create jobs from somewhere else)
 (Optional, default `false`)
 
 If given the worker will look for a job of the given type with a due date in the past. If none is found the worker creates one and calls the `GetInitialJobParameters` method to get the parameters of it. The due date of the initial job will be the current date plus the [AddNextJobAfter](#addnextjobafter) period of time.
+
+### DeleteJobsOlderThan
+
+(Optional, default `null`)
+
+If a `TimeSpan` is given to this setting then the worker will delete finished jobs after each job run. From the current timestamp the given timespan is substracted, every finished job of the type that is set via `JobType` whose `UpdatedAt` is older than the calculated time is removed from the database. You can use this to prevent an ever growing database, especially when you run jobs in short intervalls.
+
+The worker will delete jobs the first time it runs and than every 24 hours. The cleaning will be between `PreJobRunHook` and `PostJobRunHook` after the current job was executed.
+
+**Note:** You can specify `TimeSpan` values via `appsettings.json` by following [Standard TimeSpan format strings](https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-timespan-format-strings).
+
+In `NodeJS` you can give an object with `days`, `hours`, `minutes`, `seconds` or a combination of those. For example, to remove jobs older than 6 months you could set this in you `config.json`:
+```json
+{
+  "someWorker": {
+    "jobType": "some-job",
+    "deleteJobsOlderThan": {
+      "days": 180
+    }
+  }
+}
+```

@@ -57,6 +57,22 @@ public interface IJobRepository<TParams, TResult>
     CancellationToken cancellationToken = default);
 
   /// <summary>
+  /// Deletes jobs from the database filtered by type, state, last updated date or a combination of these.
+  /// </summary>
+  /// <param name="type">The type of the job.</param>
+  /// <param name="state">The state of the job.</param>
+  /// <param name="lastUpdatedBefore">The date until when the job was last updated.</param>
+  /// <param name="cancellationToken">A token to cancel the operation.</param>
+  /// <returns>The amount of jobs that were deleted.</returns>
+  Task<int> DeleteJobsAsync(
+    string type,
+    JobState? state = null,
+    [TsParameter(Type = "Date | undefined", DefaultValue = "undefined")]
+    DateTime? lastUpdatedBefore = null,
+    [TsParameter(Type = "AbortSignal", DefaultValue = "undefined")]
+    CancellationToken cancellationToken = default);
+
+  /// <summary>
   /// Checks if a job with the given conditions already exists and returns it if so.
   /// </summary>
   /// <param name="type">The type of the job.</param>
