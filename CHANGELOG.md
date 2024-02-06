@@ -1,3 +1,10 @@
+# [3.2.0](https://github.com/droidsolutions/job-service/compare/v3.1.0...v3.2.0) (2024-02-06)
+
+
+### Features
+
+* **JobWorkerBase:** optional remove old jobs after job run ([661658e](https://github.com/droidsolutions/job-service/commit/661658ef7e43e5cc60c48ac4c9e2a4efcd230dc3))
+
 # [3.1.0](https://github.com/droidsolutions/job-service/compare/v3.0.1...v3.1.0) (2024-02-02)
 
 
