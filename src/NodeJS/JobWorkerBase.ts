@@ -343,7 +343,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     this.lastJobDeleteTime = current;
 
     if (deleted > 0) {
-      this.baseLogger.info("Deleted %d old jobs of type %s.", deleted, jobType);
+      this.baseLogger.info({ jobType }, "Deleted %d old jobs of type %s.", deleted, jobType);
     }
   }
 }
