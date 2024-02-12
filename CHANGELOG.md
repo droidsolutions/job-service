@@ -1,3 +1,10 @@
+## [3.2.3](https://github.com/droidsolutions/job-service/compare/v3.2.2...v3.2.3) (2024-02-12)
+
+
+### Bug Fixes
+
+* **NodeJS:** add jobType to logs when jobs are deleted ([1429243](https://github.com/droidsolutions/job-service/commit/142924344b977d320b7f4794278bb6f316ec204b))
+
 ## [3.2.2](https://github.com/droidsolutions/job-service/compare/v3.2.1...v3.2.2) (2024-02-12)
 
 
