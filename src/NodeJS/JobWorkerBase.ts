@@ -332,6 +332,8 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     cancellationToken: AbortSignal,
   ) {
     const current = new Date();
+
+    // don't spam delete queries for jobs with short intervals
     if (this.lastJobDeleteTime && sub(current, { hours: 24 }) > this.lastJobDeleteTime) {
       return;
     }
