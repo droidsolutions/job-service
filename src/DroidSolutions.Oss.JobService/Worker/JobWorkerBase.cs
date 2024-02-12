@@ -382,7 +382,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
     DateTime now = DateTime.UtcNow;
 
     // only delete once a day to prevent unneeded db calls on jobs with short intervals
-    if (_lastDeletedAt.HasValue && now.Subtract(TimeSpan.FromHours(24)) >= _lastDeletedAt.Value)
+    if (_lastDeletedAt.HasValue && now.Subtract(TimeSpan.FromHours(24)) < _lastDeletedAt.Value)
     {
       return;
     }
