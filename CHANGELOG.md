@@ -1,3 +1,11 @@
+## [3.2.2](https://github.com/droidsolutions/job-service/compare/v3.2.1...v3.2.2) (2024-02-12)
+
+
+### Bug Fixes
+
+* **JobWorkerBase:** only run delete jobs once every 24 hours ([263385a](https://github.com/droidsolutions/job-service/commit/263385a068908ca9a852f41951e10e4f8ae34ed5))
+* **NodeJS:** really only run delete jobs once every 24 hours ([b43cab6](https://github.com/droidsolutions/job-service/commit/b43cab604b9cdcff1e02dfeb1332e6ee5c905019))
+
 ## [3.2.1](https://github.com/droidsolutions/job-service/compare/v3.2.0...v3.2.1) (2024-02-12)
 
 
