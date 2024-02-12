@@ -332,7 +332,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     cancellationToken: AbortSignal,
   ) {
     const current = new Date();
-    if (this.lastJobDeleteTime && sub(current, olderThan) > this.lastJobDeleteTime) {
+    if (this.lastJobDeleteTime && sub(current, { hours: 24 }) > this.lastJobDeleteTime) {
       return;
     }
 
