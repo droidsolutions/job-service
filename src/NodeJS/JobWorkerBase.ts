@@ -334,7 +334,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     const current = new Date();
 
     // don't spam delete queries for jobs with short intervals
-    if (this.lastJobDeleteTime && sub(current, { hours: 24 }) > this.lastJobDeleteTime) {
+    if (this.lastJobDeleteTime && sub(current, { hours: 24 }) < this.lastJobDeleteTime) {
       return;
     }
 
