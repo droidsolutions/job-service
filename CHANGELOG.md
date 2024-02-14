@@ -1,3 +1,10 @@
+# [3.3.0](https://github.com/droidsolutions/job-service/compare/v3.2.3...v3.3.0) (2024-02-14)
+
+
+### Features
+
+* **JobWorkerBase:** add .NET Meter metrics for job count and duration ([d58a378](https://github.com/droidsolutions/job-service/commit/d58a37812c9e89fec06d9334a6bbd6c34f0d7858))
+
 ## [3.2.3](https://github.com/droidsolutions/job-service/compare/v3.2.2...v3.2.3) (2024-02-12)
 
 
