@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Metrics;
 
 using DroidSolutions.Oss.JobService.Worker.Settings;
 
@@ -24,6 +25,20 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   where TParams : class?
   where TResult : class?
 {
+  /// <summary>
+  /// Gets the meter for this worker.
+  /// </summary>
+  protected static readonly Meter WorkerMeter = new Meter("droidsolutions.oss.jobworker");
+  private static readonly Counter<int> ExecutedJobsCounter = WorkerMeter.CreateCounter<int>(
+    name: "droidsolutions.oss.jobworker.executed_jobs",
+    unit: "{jobs}",
+    description: "Counter for executed jobs");
+
+  private static readonly Histogram<double> JobProcessingTime = WorkerMeter.CreateHistogram<double>(
+    name: "droidsolutions.oss.jobworker.job_processing_time",
+    unit: "ms",
+    description: "Histogram for job processing time");
+
   private readonly IOptionsMonitor<JobWorkerSettings> _workerSettings;
   private readonly IServiceProvider _serviceProvider;
   private readonly ILogger _logger;
@@ -165,6 +180,9 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
         if (executed)
         {
           _lastJobDurationMs = stopwatch.ElapsedMilliseconds;
+          JobProcessingTime.Record(
+            _lastJobDurationMs,
+            new KeyValuePair<string, object?>("type", _workerSettings.CurrentValue.JobType));
         }
 
         _lastJobFinishedAt = DateTime.UtcNow;
@@ -229,8 +247,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   {
     var executed = false;
     using IServiceScope serviceScope = _serviceProvider.CreateScope();
-    _jobRepository = serviceScope.ServiceProvider
-      .GetRequiredService<IJobRepository<TParams, TResult>>();
+    _jobRepository = serviceScope.ServiceProvider.GetRequiredService<IJobRepository<TParams, TResult>>();
 
     _currentJob = await GetJobAsync(_jobRepository, settings, cancellationToken);
 
@@ -242,6 +259,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
         await _jobRepository.FinishJobAsync(_currentJob, settings.AddNextJobAfter, cancellationToken);
 
         _executedJobs++;
+        ExecutedJobsCounter.Add(1, new KeyValuePair<string, object?>("type", _currentJob.Type));
         executed = true;
       }
       catch (Exception ex)

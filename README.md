@@ -492,3 +492,25 @@ In `NodeJS` you can give an object with `days`, `hours`, `minutes`, `seconds` or
   }
 }
 ```
+
+## Metrics
+
+The job worker currently implements two metrics using the [.NET metrics](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/metrics). The static Meter is protected, so your worker can use it to add its own metrics to it.
+
+For example you can create a counter and then add to it:
+```cs
+public class MyWorker : JobWorkerBase<void, void>
+{
+  private static readonly Counter<int> MyCounter = WorkerMeter.CreateCounter<int>("my_counter");
+
+  // ...
+  protected override async Task<TestResult> ProcessJobAsync(
+    IJob<void, void> job,
+    IServiceScope serviceScope,
+    CancellationToken cancellationToken)
+  {
+    // process job, then increment counter for some objects in your job
+    MyCounter.Add(1);
+  }
+}
+```
