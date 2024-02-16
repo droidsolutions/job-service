@@ -1,6 +1,6 @@
 {
   "name": "@droidsolutions-oss/job-service",
-  "version": "3.3.0",
+  "version": "3.3.1",
   "description": "Base library that provides a way to manage recurring jobs in a database.",
   "main": "dist/src/NodeJS/Index.js",
   "types": "dist/src/NodeJS/Index.d.ts",

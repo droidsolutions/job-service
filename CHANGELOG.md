@@ -1,3 +1,10 @@
+## [3.3.1](https://github.com/droidsolutions/job-service/compare/v3.3.0...v3.3.1) (2024-02-16)
+
+
+### Bug Fixes
+
+* **JobWorkerBase:** remove duplicate metric prefix ([8ac0b9c](https://github.com/droidsolutions/job-service/commit/8ac0b9c6c9436028fadcb43215b1f6d50beb2abf))
+
 # [3.3.0](https://github.com/droidsolutions/job-service/compare/v3.2.3...v3.3.0) (2024-02-14)
 
 
