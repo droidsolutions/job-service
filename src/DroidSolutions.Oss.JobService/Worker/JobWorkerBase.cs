@@ -30,12 +30,12 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   /// </summary>
   protected static readonly Meter WorkerMeter = new Meter("droidsolutions.oss.jobworker");
   private static readonly Counter<int> ExecutedJobsCounter = WorkerMeter.CreateCounter<int>(
-    name: "droidsolutions.oss.jobworker.executed_jobs",
+    name: "executed_jobs",
     unit: "{jobs}",
     description: "Counter for executed jobs");
 
   private static readonly Histogram<double> JobProcessingTime = WorkerMeter.CreateHistogram<double>(
-    name: "droidsolutions.oss.jobworker.job_processing_time",
+    name: "job_processing_time",
     unit: "ms",
     description: "Histogram for job processing time");
 
