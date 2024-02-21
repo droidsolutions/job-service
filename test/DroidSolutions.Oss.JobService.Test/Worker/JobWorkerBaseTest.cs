@@ -2,9 +2,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-using DroidSolutions.Oss.JobService;
-using DroidSolutions.Oss.JobService.Worker.Settings;
 using DroidSolutions.Oss.JobService.Test.Fixture;
+using DroidSolutions.Oss.JobService.Worker.Settings;
 
 using FluentAssertions;
 
@@ -50,15 +49,17 @@ public class JobWorkerBaseTest
   [Fact]
   public async Task ExecuteAsync_ShouldBreakLoop_WhenOperationCanceledExceptionIsThrown()
   {
-    var repoMock = new Mock<IJobRepository<TestParameter, TestResult>>();
+    CancellationTokenSource cts = new();
+    Mock<IJobRepository<TestParameter, TestResult>> repoMock = new();
     repoMock
       .Setup(x => x.GetAndStartFirstPendingJobAsync(_settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+      .Callback(cts.Cancel) // Cancel token so exception handlers matches
       .ThrowsAsync(new OperationCanceledException("Test"));
 
     IServiceProvider provider = SetupDi(repoMock.Object);
 
-    var sut = new TestWorker(_settings, provider);
-    await sut.StartAsync(CancellationToken.None);
+    TestWorker sut = new(_settings, provider);
+    await sut.StartAsync(cts.Token);
 
     sut.PostHookCalled.Should().BeFalse();
   }
@@ -105,7 +106,7 @@ public class JobWorkerBaseTest
 
     IServiceProvider provider = SetupDi(repoMock.Object);
 
-    var worker = new TestWorker(_settings, provider);
+    TestWorker worker = new(_settings, provider);
 
     worker.SetProcessFunction((x) => throw new OperationCanceledException());
 

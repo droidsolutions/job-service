@@ -178,6 +178,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
       catch (Exception ex)
       {
         _logger.LogError(ex, "Stopping worker {Runner} due to an unhandled error.", RunnerName);
+        throw;
       }
       finally
       {
@@ -325,14 +326,8 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
     {
       return await repo.GetAndStartFirstPendingJobAsync(settings.JobType, RunnerName, cancellationToken);
     }
-    catch (Exception ex)
+    catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
     {
-      if (ex is OperationCanceledException && cancellationToken.IsCancellationRequested)
-      {
-        // App is probably shutting down, just break the loop in outer method
-        throw;
-      }
-
       _logger.LogError(ex, "Error checking for next job: {Message}", ex.Message);
       throw new InvalidOperationException("Unable to check and start job.", ex);
     }
