@@ -170,9 +170,14 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
         stoppingToken.ThrowIfCancellationRequested();
         await Task.Delay(settings.JobPollingIntervalSeconds * 1000, stoppingToken);
       }
-      catch (OperationCanceledException)
+      catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
       {
+        _logger.LogInformation("Cancellation requested, worker {Runner} stopped.", RunnerName);
         break;
+      }
+      catch (Exception ex)
+      {
+        _logger.LogError(ex, "Stopping worker {Runner} due to an unhandled error.", RunnerName);
       }
       finally
       {
@@ -273,7 +278,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
         // Since operation was cancelled (probably cause app is shutting down) no sense in forwarding our token
         await _jobRepository.ResetJobAsync(_currentJob, default);
 
-        if (ex is OperationCanceledException)
+        if (ex is OperationCanceledException && cancellationToken.IsCancellationRequested)
         {
           throw;
         }
@@ -322,7 +327,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
     }
     catch (Exception ex)
     {
-      if (ex is OperationCanceledException)
+      if (ex is OperationCanceledException && cancellationToken.IsCancellationRequested)
       {
         // App is probably shutting down, just break the loop in outer method
         throw;
