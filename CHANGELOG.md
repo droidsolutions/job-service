@@ -1,3 +1,11 @@
+## [3.3.2](https://github.com/droidsolutions/job-service/compare/v3.3.1...v3.3.2) (2024-02-21)
+
+
+### Bug Fixes
+
+* **JobWorkerBase:** break worker loop when exception is thrown ([7efa16a](https://github.com/droidsolutions/job-service/commit/7efa16a9115fc0861611b4e1e865ef20d296cacb))
+* **JobWorkerBase:** improve exception handling when cancelled ([45385a5](https://github.com/droidsolutions/job-service/commit/45385a57e8240641fdfeb0de1198b36231a80ac6))
+
 ## [3.3.1](https://github.com/droidsolutions/job-service/compare/v3.3.0...v3.3.1) (2024-02-16)
 
 
