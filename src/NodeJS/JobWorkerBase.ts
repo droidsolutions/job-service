@@ -1,4 +1,4 @@
-import { add, addDays, sub } from "date-fns";
+import { add, addDays, isEqual, sub } from "date-fns";
 import { nanoid } from "nanoid";
 import type { IJob } from "./Generated/IJob";
 import type { IJobRepository } from "./Generated/IJobRepository";
@@ -305,12 +305,18 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
   private async addInitialJob(settings: IJobWorkerSettings, cancellationToken: AbortSignal) {
     // calculate date until which a job with duedate should exist
     let dueDate = new Date();
+    dueDate = new Date(dueDate.getTime() + dueDate.getTimezoneOffset() * 60000); // convert to UTC
+    let copy = dueDate;
     if (settings.addNextJobAfter) {
       // use intervall between jobs as limit
       dueDate = add(dueDate, settings.addNextJobAfter);
     } else {
       // Default to 1 day
       dueDate = addDays(dueDate, 1);
+    }
+
+    if (isEqual(dueDate, copy)) {
+      throw new Error("Unable to add initial job, seems like addNextJobAfter setting is incorrect.");
     }
 
     const params = this.getInitialJobParameters();
