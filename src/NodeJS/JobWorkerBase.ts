@@ -306,7 +306,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     // calculate date until which a job with duedate should exist
     let dueDate = new Date();
     dueDate = new Date(dueDate.getTime() + dueDate.getTimezoneOffset() * 60000); // convert to UTC
-    let copy = dueDate;
+    const copy = dueDate;
     if (settings.addNextJobAfter) {
       // use intervall between jobs as limit
       dueDate = add(dueDate, settings.addNextJobAfter);
