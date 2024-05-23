@@ -1,3 +1,10 @@
+## [3.3.3](https://github.com/droidsolutions/job-service/compare/v3.3.2...v3.3.3) (2024-05-23)
+
+
+### Bug Fixes
+
+* **NodeJS:** use UTC date when adding new job ([6bf43d9](https://github.com/droidsolutions/job-service/commit/6bf43d9fbfc5ca46441a31bfc4b37ad44deb2ded))
+
 ## [3.3.2](https://github.com/droidsolutions/job-service/compare/v3.3.1...v3.3.2) (2024-02-21)
 
 
