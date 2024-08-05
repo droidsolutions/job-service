@@ -21,7 +21,6 @@ module.exports = {
   rules: {
     "comma-dangle": ["error", "always-multiline"],
     "dot-notation": ["error"],
-    "@typescript-eslint/ban-types": "error",
     "node/no-unsupported-features/es-syntax": ["error", { version: ">=14.0.0", ignores: ["modules"] }],
     "@typescript-eslint/no-unused-vars": [
       "warn",

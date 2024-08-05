@@ -214,6 +214,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     return new Promise((resolve, reject) => {
       const abortHandler = (_event: Event) => {
         clearTimeout(timeout);
+        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
         reject(cancellationToken.reason);
       };
 
