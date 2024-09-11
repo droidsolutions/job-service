@@ -341,7 +341,8 @@ public class PostgresJobRepositoryTest
       Type = deleteType,
       UpdatedAt = refDate.AddHours(-12),
     };
-    Job<TestParameter, TestResult> job2 = new() {
+    Job<TestParameter, TestResult> job2 = new()
+    {
       State = JobState.Finished,
       Type = deleteType,
       UpdatedAt = refDate.AddHours(-24),
@@ -356,7 +357,7 @@ public class PostgresJobRepositoryTest
     await _setup.Context.SaveChangesAsync();
 
     int result = await _sut.DeleteJobsAsync(deleteType, JobState.Finished, refDate.AddHours(-18), default);
-    
+
     result.Should().Be(1);
   }
 }

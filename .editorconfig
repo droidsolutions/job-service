@@ -7,6 +7,8 @@ insert_final_newline = true
 
 # C# files
 [*.cs]
+indent_size = 2
+insert_final_newline = true
 
 #### .NET Coding Conventions ####
 [*.{cs,vb}]
@@ -362,3 +364,6 @@ roslynator_accessibility_modifiers = explicit
 roslynator_enum_has_flag_style = operator
 roslynator_object_creation_parentheses_style = omit
 roslynator_object_creation_type_style = explicit|implicit|implicit_when_type_is_obvious
+
+# Other rules
+dotnet_diagnostic.CA1848.severity = none

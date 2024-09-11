@@ -26,7 +26,7 @@ public class PostgresDbSetup : IAsyncLifetime
       .UseNpgsql(config.GetConnectionString("DataContext"))
       // .UseLoggerFactory(factory)
       .EnableSensitiveDataLogging(true);
-  
+
     Context = new TestContext(dbContextBuilder.Options);
   }
 
