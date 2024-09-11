@@ -514,3 +514,11 @@ public class MyWorker : JobWorkerBase<void, void>
   }
 }
 ```
+
+## Health
+
+Implementing proper health checking of your job worker is up to you, however there are some metrics provided by the `JobWorkerBase` that can help you determining if the worker is healthy.
+
+The protected properties `LastJobExecutionStart` and `LastJobExecutionStop` (`lastJobExecutionStart` and `lastJobExecutionStop` in NodeJS) are set each time the main execution loop starts and ends. This can be used (along with `JobPollingIntervalSeconds` from worker settings) to calculate if the loop is still beeing executed.
+
+You can also retrieve basic worker metrics so you know about last time a job actually finished and how long it took to process.

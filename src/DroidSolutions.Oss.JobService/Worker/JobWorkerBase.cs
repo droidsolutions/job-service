@@ -28,7 +28,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   /// <summary>
   /// Gets the meter for this worker.
   /// </summary>
-  protected static readonly Meter WorkerMeter = new Meter("droidsolutions.oss.jobworker");
+  protected static readonly Meter WorkerMeter = new("droidsolutions.oss.jobworker");
   private static readonly Counter<int> ExecutedJobsCounter = WorkerMeter.CreateCounter<int>(
     name: "executed_jobs",
     unit: "{jobs}",
@@ -72,6 +72,16 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   /// Gets the name of the current runner.
   /// </summary>
   public string RunnerName { get; private set; }
+
+  /// <summary>
+  /// Gets the last time the job execution loop started.
+  /// </summary>
+  protected DateTime? LastJobExecutionStart { get; private set; }
+
+  /// <summary>
+  /// Gets the last time the job execution loop finished.
+  /// </summary>
+  protected DateTime? LastJobExecutionStop { get; private set; }
 
   /// <summary>
   /// Exports collected metrics.
@@ -158,7 +168,9 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
     {
       Stopwatch stopwatch = new();
       stopwatch.Start();
+      LastJobExecutionStart = DateTime.UtcNow;
       var executed = false;
+
       try
       {
         PreJobRunHook();
@@ -167,8 +179,6 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
 
         PostJobRunHook();
         isFirstRun = false;
-        stoppingToken.ThrowIfCancellationRequested();
-        await Task.Delay(settings.JobPollingIntervalSeconds * 1000, stoppingToken);
       }
       catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
       {
@@ -185,13 +195,28 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
         stopwatch.Stop();
         if (executed)
         {
+          _lastJobFinishedAt = DateTime.UtcNow;
           _lastJobDurationMs = stopwatch.ElapsedMilliseconds;
           JobProcessingTime.Record(
             _lastJobDurationMs,
             new KeyValuePair<string, object?>("type", _workerSettings.CurrentValue.JobType));
         }
 
-        _lastJobFinishedAt = DateTime.UtcNow;
+        LastJobExecutionStop = DateTime.UtcNow;
+      }
+
+      try
+      {
+        stoppingToken.ThrowIfCancellationRequested();
+        JobWorkerSettings settings = _workerSettings.CurrentValue;
+
+        // Wait before checking again for available jobs
+        await Task.Delay(settings.JobPollingIntervalSeconds * 1000, stoppingToken);
+      }
+      catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+      {
+        _logger.LogInformation("Cancellation requested, worker {Runner} stopped.", RunnerName);
+        break;
       }
     }
   }

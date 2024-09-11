@@ -23,6 +23,12 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
   private lastJobFinishTime: Date | undefined;
   private lastJobDeleteTime: Date | undefined;
 
+  /** The last time the job execution loop started in high resolution (nanoseconds) real time. */
+  protected lastJobExecutionStart?: bigint;
+
+  /** The last time the job execution loop ended in high resolution (nanoseconds) real time. */
+  protected lastJobExecutionStop?: bigint;
+
   /**
    * Initializes a new instance of the @see JobWorkerBase class.
    * @param {IJobWorkerSettings} settings The job worker settings.
@@ -134,16 +140,13 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
     while (!stoppingToken.aborted) {
       const executed = false;
-      const startTime = process.hrtime.bigint();
+      this.lastJobExecutionStart = process.hrtime.bigint();
       try {
         this.preJobRunHook();
         await this.handleJobRunAsync(this.settings, stoppingToken, firstRun);
         this.postJobRunHook();
 
         firstRun = false;
-
-        stoppingToken.throwIfAborted();
-        await this.delay(this.settings.jobPollingIntervalSeconds, stoppingToken);
       } catch (err) {
         if (stoppingToken.aborted) {
           this.baseLogger.info({ runner: this.runnerName }, "Stopped runner %s.", this.runnerName);
@@ -152,12 +155,24 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
         throw err;
       } finally {
+        this.lastJobExecutionStop = process.hrtime.bigint();
         if (executed) {
-          const endTime = process.hrtime.bigint();
-          this.lastJobDurationMs = Number((endTime - startTime) / 1000000n);
+          this.lastJobDurationMs = Number((this.lastJobExecutionStop - this.lastJobExecutionStart) / 1000000n);
         }
 
         this.lastJobFinishTime = new Date();
+      }
+
+      try {
+        stoppingToken.throwIfAborted();
+
+        // Wait before checking again for available jobs
+        await this.delay(this.settings.jobPollingIntervalSeconds, stoppingToken);
+      } catch (err) {
+        if (stoppingToken.aborted) {
+          this.baseLogger.info({ runner: this.runnerName }, "Stopped runner %s.", this.runnerName);
+          break;
+        }
       }
     }
   }
