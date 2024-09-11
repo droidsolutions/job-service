@@ -1,3 +1,10 @@
+# [3.4.0](https://github.com/droidsolutions/job-service/compare/v3.3.3...v3.4.0) (2024-09-11)
+
+
+### Features
+
+* add LastJobExecutionStart and Stop to JobWorkerBase ([53e8832](https://github.com/droidsolutions/job-service/commit/53e88327e0b1eb17018bb80a9989e8dea11d79db))
+
 ## [3.3.3](https://github.com/droidsolutions/job-service/compare/v3.3.2...v3.3.3) (2024-05-23)
 
 
