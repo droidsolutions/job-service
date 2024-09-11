@@ -76,11 +76,13 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   /// <summary>
   /// Gets the last time the job execution loop started.
   /// </summary>
+  [TsIgnore]
   protected DateTime? LastJobExecutionStart { get; private set; }
 
   /// <summary>
   /// Gets the last time the job execution loop finished.
   /// </summary>
+  [TsIgnore]
   protected DateTime? LastJobExecutionStop { get; private set; }
 
   /// <summary>
