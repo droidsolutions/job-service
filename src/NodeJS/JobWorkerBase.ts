@@ -171,7 +171,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
         await this.delay(this.settings.jobPollingIntervalSeconds, stoppingToken);
       } catch (err) {
         if (stoppingToken.aborted) {
-          this.baseLogger.info({ runner: this.runnerName }, "Stopped runner %s.", this.runnerName);
+          this.baseLogger.info({ runner: this.runnerName, err }, "Stopped runner %s.", this.runnerName);
           break;
         }
       }
