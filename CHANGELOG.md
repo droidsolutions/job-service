@@ -1,3 +1,11 @@
+# [3.5.0](https://github.com/droidsolutions/job-service/compare/v3.4.0...v3.5.0) (2024-09-18)
+
+
+### Features
+
+* add AddNextJobIn method to worker ([98ccfab](https://github.com/droidsolutions/job-service/commit/98ccfabc898591e9d33e2e46d0e126a002641eea))
+* **NodeJS:** add TimeSPan custom type to mirror .NET TimeSpan ([291660c](https://github.com/droidsolutions/job-service/commit/291660cca1d8419b1e9b3d5b225af85dcaacae19))
+
 # [3.4.0](https://github.com/droidsolutions/job-service/compare/v3.3.3...v3.4.0) (2024-09-11)
 
 
