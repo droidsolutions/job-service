@@ -263,6 +263,19 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   }
 
   /// <summary>
+  /// Retrieves a time that marks the span between finishing the current job and the due date of the next job. If null,
+  /// no new job will be added.
+  /// </summary>
+  /// <param name="settings">An instance of the current job settings.</param>
+  /// <param name="result">The result of the current job.</param>
+  /// <returns>The timespan from now until the next job is due.</returns>]
+  [TsFunction(Type = "TimeSpan | undefined")]
+  protected virtual TimeSpan? AddNextJobIn(JobWorkerSettings settings, TResult? result)
+  {
+    return settings.AddNextJobAfter;
+  }
+
+  /// <summary>
   /// Handles a single run by checking for a new job and invoke the processing method if any.
   /// </summary>
   /// <param name="settings">An instance of the current job settings.</param>
@@ -289,7 +302,8 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
       try
       {
         _currentJob.Result = await ProcessJobAsync(_currentJob, serviceScope, cancellationToken);
-        await _jobRepository.FinishJobAsync(_currentJob, settings.AddNextJobAfter, cancellationToken);
+        TimeSpan? nextJobIn = AddNextJobIn(settings, _currentJob.Result);
+        await _jobRepository.FinishJobAsync(_currentJob, nextJobIn, cancellationToken);
 
         _executedJobs++;
         ExecutedJobsCounter.Add(1, new KeyValuePair<string, object?>("type", _currentJob.Type));

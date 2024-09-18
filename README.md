@@ -465,6 +465,8 @@ Leave this empty if you want a one time job (or create jobs from somewhere else)
 
 **Note:** You can specify `TimeSpan` values via `appsettings.json` by following [Standard TimeSpan format strings](https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-timespan-format-strings).
 
+The `JobWorkerBase` has a protected method `AddNextJobIn` that receives the settings instance and the job result. It can be overridden to customize if a new job should be added based on the result of a job. For example you can create a new job if something didn't work out and you want to create a new job to retry the action.
+
 ### AddInitialJob
 
 (Optional, default `false`)

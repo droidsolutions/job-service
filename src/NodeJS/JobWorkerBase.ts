@@ -8,6 +8,7 @@ import { IJobWorkerMetrics } from "./Generated/Worker/IJobWorkerMetrics";
 import type { IJobWorkerSettings } from "./Generated/Worker/Settings/IJobWorkerSettings";
 import type { LoggerFactory, SimpleLogger } from "./Helper/LoggerFactory";
 import { EmtpyLogger } from "./Helper/LoggerFactory";
+import { TimeSpan } from "./types";
 
 /**
  * A base class that allows to implement a job worker.
@@ -207,6 +208,10 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     await this.jobRepo.addProgressAsync(this.currentJob, amount, true, this.cancellationToken);
   }
 
+  public addNextJobIn(settings: IJobWorkerSettings, result?: TResult): TimeSpan | undefined {
+    return settings.addNextJobAfter;
+  }
+
   private assertRepo(repo: IJobRepository<TParams, TResult> | undefined): asserts repo {
     if (!repo) {
       throw new Error("Unable to perform action on job because job repository is not set.");
@@ -348,11 +353,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     }
   }
 
-  private async deleteOldJobs(
-    jobType: string,
-    olderThan: { days?: number; hours?: number; minutes?: number; seconds?: number },
-    cancellationToken: AbortSignal,
-  ) {
+  private async deleteOldJobs(jobType: string, olderThan: TimeSpan, cancellationToken: AbortSignal) {
     const current = new Date();
 
     // don't spam delete queries for jobs with short intervals
