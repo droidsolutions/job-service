@@ -109,7 +109,7 @@ public interface IJobRepository<TParams, TResult>
   /// <returns>A task indicating when the operation is completed.</returns>
   Task FinishJobAsync(
     IJob<TParams, TResult> job,
-    [TsParameter(Type = "{ days?: number; hours?: number; minutes?: number; seconds?: number } | undefined")]
+    [TsParameter(Type = "TimeSpan | undefined")]
     TimeSpan? addNextJobIn = null,
     [TsParameter(Type = "AbortSignal", DefaultValue = "undefined")]
     CancellationToken cancellationToken = default);

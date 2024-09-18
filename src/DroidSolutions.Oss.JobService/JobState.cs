@@ -15,6 +15,8 @@ using Reinforced.Typings.Attributes;
   UseModules = true,
   TabSymbol = "  ")]
 
+[assembly: TsImport(ImportTarget = "type { TimeSpan }", ImportSource = "src/NodeJS/types")]
+
 namespace DroidSolutions.Oss.JobService;
 
 /// <summary>

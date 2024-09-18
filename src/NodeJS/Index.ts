@@ -9,3 +9,4 @@ export { EmtpyLogger } from "./Helper/LoggerFactory";
 export type { LoggerFactory, SimpleLogger } from "./Helper/LoggerFactory";
 export { transformDateToUtc } from "./Helper/TimeHelper";
 export { JobWorkerBase } from "./JobWorkerBase";
+export type { TimeSpan } from "./types";

@@ -51,7 +51,7 @@ public class JobWorkerSettings
   /// When a job finishes it will trigger the next run and set the due date to the current date plus the amount of
   /// time given here. If nothing given no job will be added.
   /// </remarks>
-  [TsProperty(Type = "{ days?: number; hours?: number; minutes?: number; seconds?: number }")]
+  [TsProperty(Type = "TimeSpan")]
   public TimeSpan? AddNextJobAfter { get; set; }
 
   /// <summary>
@@ -68,6 +68,6 @@ public class JobWorkerSettings
   /// <summary>
   /// Gets or sets a value indicating whether the worker should delete jobs that are older than the given timespan.
   /// </summary>
-  [TsProperty(Type = "{ days?: number; hours?: number; minutes?: number; seconds?: number }")]
+  [TsProperty(Type = "TimeSpan")]
   public TimeSpan? DeleteJobsOlderThan { get; set; }
 }
