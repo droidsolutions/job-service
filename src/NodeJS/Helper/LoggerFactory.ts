@@ -3,10 +3,8 @@
 /**
  * A function that retrieves an instance of a logger.
  */
-export interface LoggerFactory {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-  (context: Function | string, meta?: { [key: string]: any }): SimpleLogger;
-}
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+export type LoggerFactory = (context: Function | string, meta?: Record<string, unknown>) => SimpleLogger;
 
 /**
  * A simple logger that logs messages.

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { add, addDays, isEqual, sub } from "date-fns";
 import { nanoid } from "nanoid";
 import type { IJob } from "./Generated/IJob";
@@ -208,8 +209,40 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     await this.jobRepo.addProgressAsync(this.currentJob, amount, true, this.cancellationToken);
   }
 
+  /**
+   * Determines the time span until the next job should be added after finishing the current one.
+   * @param {IJobWorkerSettings} settings - The current job settings.
+   * @param {TResult} [result] - The result of the current job.
+   * @returns {TimeSpan | undefined} - The time span until the next job is due, or undefined if no new job should be added.
+   */
   public addNextJobIn(settings: IJobWorkerSettings, result?: TResult): TimeSpan | undefined {
     return settings.addNextJobAfter;
+  }
+
+  /**
+   * Internal method to check for available jobs.
+   * @param {IJobRepository<TParams, TResult>} repo The repository.
+   * @param {IJobWorkerSettings} settings The settings.
+   * @param {AbortSignal} cancellationToken The cancellation token.
+   * @returns {Promise<IJob<TParams, TResult> | undefined>} The next due job or undefined if no job is found.
+   */
+  protected async getJobAsync(
+    repo: IJobRepository<TParams, TResult>,
+    settings: IJobWorkerSettings,
+    cancellationToken: AbortSignal,
+  ): Promise<IJob<TParams, TResult> | undefined> {
+    try {
+      return await repo.getAndStartFirstPendingJobAsync(settings.jobType, this.runnerName, cancellationToken);
+    } catch (err) {
+      if (cancellationToken.aborted) {
+        // app is probably shutting down, this is handled in the main loop
+        throw err;
+      }
+
+      this.baseLogger.error({ err }, "Error checking for next job: %s", (err as Error).message);
+
+      throw new Error(`Unable to start a new job: ${(err as Error).message}`);
+    }
   }
 
   private assertRepo(repo: IJobRepository<TParams, TResult> | undefined): asserts repo {
@@ -295,32 +328,6 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     this.currentJob = undefined;
 
     return executed;
-  }
-
-  /**
-   * Internal method to check for available jobs.
-   * @param {IJobRepository<TParams, TResult>} repo The repository.
-   * @param {IJobWorkerSettings} settings The settings.
-   * @param {AbortSignal} cancellationToken The cancellation token.
-   * @returns {Promise<IJob<TParams, TResult> | undefined>} The next due job or undefined if no job is found.
-   */
-  private async getJobAsync(
-    repo: IJobRepository<TParams, TResult>,
-    settings: IJobWorkerSettings,
-    cancellationToken: AbortSignal,
-  ): Promise<IJob<TParams, TResult> | undefined> {
-    try {
-      return await repo.getAndStartFirstPendingJobAsync(settings.jobType, this.runnerName, cancellationToken);
-    } catch (err) {
-      if (cancellationToken.aborted) {
-        // app is probably shutting down, this is handled in the main loop
-        throw err;
-      }
-
-      this.baseLogger.error({ err }, "Error checking for next job: %s", (err as Error).message);
-
-      throw new Error(`Unable to start a new job: ${(err as Error).message}`);
-    }
   }
 
   private async addInitialJob(settings: IJobWorkerSettings, cancellationToken: AbortSignal) {
