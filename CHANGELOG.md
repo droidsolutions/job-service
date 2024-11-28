@@ -1,3 +1,10 @@
+# [3.6.0](https://github.com/droidsolutions/job-service/compare/v3.5.0...v3.6.0) (2024-11-28)
+
+
+### Features
+
+* **NodeJS:** allow to override getJobAsync by making it protected ([6393be9](https://github.com/droidsolutions/job-service/commit/6393be9613636bad874ecefa3be9efe2a2dd5f17))
+
 # [3.5.0](https://github.com/droidsolutions/job-service/compare/v3.4.0...v3.5.0) (2024-09-18)
 
 
