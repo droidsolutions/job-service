@@ -2,7 +2,7 @@
 version: 2
 updates:
   - assignees:
-      - "kampfmoehre"
+      - "Kampfmoehre"
     commit-message:
       prefix: "chore"
     groups:
@@ -27,7 +27,7 @@ updates:
     schedule:
       interval: daily
   - assignees:
-      - "kampfmoehre"
+      - "Kampfmoehre"
     commit-message:
       prefix: "ci"
     directory: /
@@ -44,7 +44,7 @@ updates:
     schedule:
       interval: daily
   - assignees:
-      - "kampfmoehre"
+      - "Kampfmoehre"
     commit-message:
       prefix: "ci"
     directory: /
