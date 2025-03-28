@@ -16,7 +16,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
-    <PackageReference Include="Nanoid" Version="3.0.0" />
+    <PackageReference Include="Nanoid" Version="3.1.0" />
     <PackageReference Include="Reinforced.Typings" Version="1.6.3"/>
   </ItemGroup>
 </Project>
