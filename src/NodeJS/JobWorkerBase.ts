@@ -42,9 +42,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     protected jobRepo: IJobRepository<TParams, TResult>,
     loggerFactory?: LoggerFactory,
   ) {
-    if (!loggerFactory) {
-      loggerFactory = (_, __): SimpleLogger => new EmtpyLogger();
-    }
+    loggerFactory ??= (_, __): SimpleLogger => new EmtpyLogger();
     this.baseLogger = loggerFactory(this.constructor, {
       module: "@droidsolutions-oss/job-service",
     });
