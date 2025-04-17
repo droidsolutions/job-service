@@ -1,3 +1,19 @@
+# [4.0.0-develop.1](https://github.com/droidsolutions/job-service/compare/v3.6.0...v4.0.0-develop.1) (2025-04-17)
+
+
+### Features
+
+* allow async calls in worker Hooks ([c86570e](https://github.com/droidsolutions/job-service/commit/c86570e8a3fe502ace684b6e75ce9654b6eeac7c))
+* upgrade project to .NET 9.0 ([c09f34c](https://github.com/droidsolutions/job-service/commit/c09f34c18693ee0a66b6372fb93aaf8315fff4d8))
+
+
+### BREAKING CHANGES
+
+* (.NET) Pre- and PostJobRunHook are now async, take a CancellationToken and return a ValueTask
+and are also renamed to PreJobRunHookAsync and PostJobRunHookAsync
+* (NodeJS) pre- and postJobRunHook are now async, take an AbortSignal and return a Promise<void>
+and are also renamed to preJobRunHookAsync and postJobRunHookAsync
+
 # [3.6.0](https://github.com/droidsolutions/job-service/compare/v3.5.0...v3.6.0) (2024-11-28)
 
 
