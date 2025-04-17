@@ -189,17 +189,24 @@ public class JobRepositoryBaseTest
   [Fact]
   public async Task ResetJob_ShouldClearRunnerAndResetState()
   {
-    var job = new Job<SampleParameter, SampleResult>
+    Job<SampleParameter, SampleResult> job = new()
     {
+      FailedItems = 2,
       Runner = "some-runner",
       State = JobState.Started,
+      SuccessfulItems = 3,
+      TotalItems = 12,
     };
     _setup.Context.Jobs.Add(job);
     await _setup.Context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
     await _sut.ResetJobAsync(job, TestContext.Current.CancellationToken);
+
+    job.FailedItems.Should().BeNull();
     job.Runner.Should().BeNull();
     job.State.Should().Be(JobState.Requested);
+    job.SuccessfulItems.Should().BeNull();
+    job.TotalItems.Should().BeNull();
   }
 
   [Fact]
