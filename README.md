@@ -2,7 +2,7 @@
 
 Library to manage recurring jobs.
 
-The DroidSolutions Job service offers tools that help managing recurring jobs. It is split in multiple packages that are explained below. These contains NuGet packages for .NET 7 as well as an NPM package.
+The DroidSolutions Job service offers tools that help managing recurring jobs. It is split in multiple packages that are explained below. These contains NuGet packages for .NET 9 as well as an NPM package.
 
 Examples of jobs are:
 
@@ -46,11 +46,11 @@ The main interfaces and classes of the packages are described in this section.
 
 ## IJobBase
 
-The basis of this library are jobs. Jobs can be added, started, finished and processed.
+The base of this library are jobs. Jobs can be added, started, finished and processed.
 
 This interface is available in C# as well as [TypeScript](https://www.typescriptlang.org/).
 
-A job is meant to be stored somewhere (like a table in a database) and holds information about the job. This includes dates of creation, last update and when the job is due. There is also a state and a type to distinguish jobs of different types as well as optional properties that relate to job progress.
+A job is meant to be stored somewhere (like a table in a database) and holds information about what it should do. This includes dates of creation, last update and when the job is due. There is also a state and a type to distinguish jobs of different types as well as optional properties that relate to job progress.
 
 This interface describes base jobs without any parameters or result. They can be used when they don't need additional information to run or store their result elsewhere.
 
@@ -70,9 +70,9 @@ There is a concrete implementations of `IJob<TParams, TResult>` for [Entity Fram
 
 The `JobBase` class is a concrete implementation of the `IJobBase` interface which has annotations that may be useful when using it as an entity for [Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/).
 
-The `Job<TParams, TResult>` class is an extension that implementats the `IJob<TParams, TResult>` interface. The paramaters and results are currently directly mapped to `jsonb` column for [PostgreSQL](https://www.postgresql.org/docs/current/datatype-json.html).
+The `Job<TParams, TResult>` class is an extension that implementats the `IJob<TParams, TResult>` interface. The parameters and results are currently directly mapped to `jsonb` column for [PostgreSQL](https://www.postgresql.org/docs/current/datatype-json.html).
 
-Internally the properties for parameter and result are mapped to fields in the database to allow interoperatibility with NodeJS or other projects. This means there are `ParametersSerialized` and `ResultSerialized` properties that contain the JSON string and are mapped to the database where the `Paramters` and `Result` properties contain the actual deserialized values for you to use.
+Internally the properties for parameter and result are mapped to fields in the database to allow interoperatibility with NodeJS or other projects. This means there are `ParametersSerialized` and `ResultSerialized` properties that contain the JSON string and are mapped to the database where the `Parameters` and `Result` properties contain the actual deserialized values for you to use.
 
 When implementing your own `IJobRepository<TParams, TResult>` you are responsible for serializing and deserializing the values yourself.
 
@@ -86,7 +86,7 @@ Like for the job there are concrete implementations for EF Core and TypeORM.
 
 On the .NET side there is an interface `IJobContext` that can be implemented in your DbContext. This uses the `JobBase` class which has annotations that may be useful when using it as an entity for [Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/).
 
-The `JobRepositoryBase<TContext, TParams, TResult>` is a full implementation of the `IJobRepository<TParams, TResult>` interface using the `Job<TParams, TResult>` entity where necessary. Parameters and results are optional, that's why the `IJobContext` only uses the `BaseJob` entity. The `JobRepositoryBase<TContext, TParams, TResult>` handles checks for parameter and result existence and uses `JobBase` where they don't apply. If theyare needed, `JobBase` entities are casted to `Job<TParams, TResult>`. For this to work, your `DbContext` must register the entity, for example like this:
+The `JobRepositoryBase<TContext, TParams, TResult>` is a full implementation of the `IJobRepository<TParams, TResult>` interface using the `Job<TParams, TResult>` entity where necessary. Parameters and results are optional, that's why the `IJobContext` only uses the `BaseJob` entity. The `JobRepositoryBase<TContext, TParams, TResult>` handles checks for parameter and result existence and uses `JobBase` where they don't apply. If they are needed, `JobBase` entities are casted to `Job<TParams, TResult>`. For this to work, your `DbContext` must register the entity, for example like this:
 
 ```cs
 public class TestContext : DbContext, IJobContext
@@ -103,9 +103,9 @@ public class TestContext : DbContext, IJobContext
 
 To allow interoperatibility with job workers that use NodeJS the parameters and result are serialized with special options using camelCase property names. This can be extended or overwritten via the protected `GetSerializerOptions` method. In the background the `Job<TParams, TResult>` class has `ParametersSerialized` and `ResultSerialized` properties that hold the converted json and act as the actual database columns. The repository handles this in all methods where it is necessary so you shouldn't have to do this yourself.
 
-Adding jobs, starting jobs and setting job progress is done via transactions and table or row locks. This ensures no two parallel running worker can receive the same job or work on the same job.
+Adding jobs, starting jobs and setting job progress is done via transactions and table or row locks. This ensures no two parallel running workers can receive the same job or work on the same job.
 
-The repository constructor expects an instance of the data context that implements `IJobContext` as well a an `ILogger` instance. If you have set up dependency injection in a standard ASP.NET Core app there should be no problem, just make sure you have added the db context that implements `IJobContext` to the depdency injection via `services.AddDbContext()`.
+The repository constructor expects an instance of the data context that implements `IJobContext` as well a an `ILogger` instance. If you have set up dependency injection in a standard ASP.NET Core app there should be no problem, just make sure you have added the `DbContext` that implements `IJobContext` to the depdency injection via `services.AddDbContext()`.
 
 ## Worker
 
@@ -119,15 +119,21 @@ There are two lifecycle hooks before and after each run that can optionally be i
 
 Add a class for your worker that extends the `JobWorker<TParams, TResult>` class and implements the abstract methods.
 
-The extended worker class can be added as a [hosted service](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/hosted-services). Be sure to configure the dependency injection to be able to provide an OptionsMonitor with the `JobWorkerSettings` to the worker constructor. For example you could use something like this `services.Configure<JobWorkerSettings>(Configuration.GetSection("WorkerSettings"));`. You can also extend the settings class if you need other settings for your implemented worker.
+The extended worker class can be added as a [hosted service](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/hosted-services). Be sure to configure the dependency injection to be able to provide an OptionsMonitor with the `JobWorkerSettings` to the worker constructor. For example you could use something like this:
 
-The `PreJobRunHook` is called when a new run is executed. At this time the worker has not checked if a job is available and therefore no job exists yet. This hook can be used to set up a logger, correlation id or Sentry transactions, though it is not guarenteed that a job is available.
+```cs
+services.Configure<JobWorkerSettings>(Configuration.GetSection("WorkerSettings"));
+```
 
-**Note** The `JobWorkerBase` uses the [NanoId](https://github.com/codeyu/nanoid-net) package. Up until version 2.1.2 of this package NanoId 2.1.0 was used. In 3.0.0 NanoId changed the general namespace which can lead to incompatibilities. Since version 3.0.0 of the `DroidSolutions.Oss.JobService` package NanoId 3.0.0 is used. If you don't use the NanoId package yourself, this should not be a problem, but if you use a different version of NanoId there can be problems.
+You can also extend the settings class if you need other settings for your implemented worker.
+
+The `PreJobRunHook` is called when a new run is executed. At this time the worker has not checked if a job is available and therefore no job exists yet. This hook can be used to set up a logger, correlation id, Sentry transactions or a general health check, though it is not guarenteed that a job is available.
+
+**Note** The `JobWorkerBase` uses the [NanoId](https://github.com/codeyu/nanoid-net) package. If you don't use the NanoId package yourself, this should not be a problem, but if you use a different version of NanoId there can be problems.
 
 ### NodeJS specifics
 
-The TypeScript side has an abstract `JobWorkerBase` class that can be used as the basis of a worker implementation. For this you'll need a concrete implementation of the IJobRepository interface and pass it along with settings to the constructor. You'll then have to implement the abstract methods and you'll should be good to go.
+The TypeScript side has an abstract `JobWorkerBase` class that can be used as the base of a worker implementation. For this you'll need a concrete implementation of the IJobRepository interface and pass it along with settings to the constructor. You'll then have to implement the abstract methods and you'll should be good to go.
 
 # Usage
 
@@ -142,9 +148,9 @@ The concrete implementation depends on the kind of database you want to use. The
 3. Let your db context implement the `IJobContext` interface. That could look like this
 
    ```cs
-   public class TestContext : DbContext, IJobContext
+   public class SampleContext : DbContext, IJobContext
    {
-     public TestContext([NotNull] DbContextOptions options)
+     public SampleContext([NotNull] DbContextOptions options)
        : base(options)
      {
      }
@@ -156,14 +162,14 @@ The concrete implementation depends on the kind of database you want to use. The
 4. Register the job entities you need in the `DbContext`, if you don't need parameters and or results, use `object`:
 
    ```cs
-   public class TestContext : DbContext, IJobContext
+   public class SampleContext : DbContext, IJobContext
    {
       protected override void OnModelCreating(ModelBuilder modelBuilder)
       {
         // Register entity with object for jobs without params and result
         modelBuilder.Entity<Job<object, object>>();
         // or register entity with concrete params and result types
-        modelBuilder.Entity<Job<TestParameter, TestResult>>();
+        modelBuilder.Entity<Job<SampleParameter, SampleResult>>();
       }
    }
    ```
@@ -176,7 +182,7 @@ The concrete implementation depends on the kind of database you want to use. The
    // ...
      protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
      {
-       modelBuilder.Entity<Job<TestParameter, TestResult>>(entity =>
+       modelBuilder.Entity<Job<SampleParameter, SampleResult>>(entity =>
        {
          entity.Property(x => x.State).HasConversion(new JobStateToDescriptionConverter());
        });
@@ -186,18 +192,18 @@ The concrete implementation depends on the kind of database you want to use. The
 6. Register the `PostgresJobRepository` class in the dependency injection. For example
 
    ```cs
-   services.AddScoped<IJobRepository<TestParameter, TestResult>, PostgresJobRepository<TestContext, TestParameter, TestResult>>();
+   services.AddScoped<IJobRepository<SampleParameter, SampleResult>, PostgresJobRepository<SampleContext, SampleParameter, SampleResult>>();
    ```
 
-   Don't forget to also register the db context.
+   Don't forget to also register the `DbContext`.
 
 7. Add your own worker settings class extending from `JobWorkerSettings`. This contains settings that control how your worker behaves.
 
    ```cs
-   public class DeleteJobSettings : JobWorkerSettings
+   public class SampleJobSettings : JobWorkerSettings
    {
-     public DeleteJobSettings()
-       : base("visitor:cleanup")
+     public SampleJobSettings()
+       : base("sampleworker:samplejob")
      {
      }
 
@@ -205,16 +211,16 @@ The concrete implementation depends on the kind of database you want to use. The
    }
    ```
 
-8. Add a class that extends and implements `JobWorkerBase<TParams, TResult>`. Inject an `IOptionsMonitor<DeleteJobSettings>` (or the default `JobWorkerSettings`), an `ILoggerFactory` and an instance of the IServiceProvider. Pass all three of those to the base contructor and implement the abstract methods. The result could look like this:
+8. Add a class that extends and implements `JobWorkerBase<TParams, TResult>`. Inject an `IOptionsMonitor<SampleJobSettings>` (or the default `JobWorkerSettings`), an `ILoggerFactory` and an instance of the IServiceProvider. Pass all three of those to the base contructor and implement the abstract methods. The result could look like this:
 
    ```cs
-   public class DeleteVisitorWorker : JobWorkerBase<TestParameter, TestResult>
+   public class SampleWorker : JobWorkerBase<SampleParameter, SampleResult>
    {
-     public DeleteVisitorWorker(
-       IOptionsMonitor<DeleteJobSettings> settings,
+     public SampleWorker(
+       IOptionsMonitor<SampleJobSettings> settings,
        IServiceProvider serviceProvider,
        ILoggerFactory loggerFactory)
-       : base(settings, serviceProvider, loggerFactory.CreateLogger<JobWorkerBase<TestParameter, TestResult>>())
+       : base(settings, serviceProvider, loggerFactory.CreateLogger<JobWorkerBase<SampleParameter, SampleResult>>())
      {
      }
 
@@ -228,9 +234,9 @@ The concrete implementation depends on the kind of database you want to use. The
      }
 
      // optional
-     protected override TestParameter? GetInitialJobParameters()
+     protected override SampleParameter? GetInitialJobParameters()
      {
-       return new TestParameter { SomeProp = "MyValue" };
+       return new SampleParameter { SomeProp = "MyValue" };
      }
 
      // optional
@@ -246,8 +252,8 @@ The concrete implementation depends on the kind of database you want to use. The
      }
 
      /// <inheritdoc/>
-     protected override async Task<TestResult> ProcessJobAsync(
-       IJob<TestParams, TestResult> job,
+     protected override async Task<SampleResult> ProcessJobAsync(
+       IJob<SampleParams, SampleResult> job,
        IServiceScope serviceScope,
        CancellationToken cancellationToken)
      {
@@ -255,7 +261,7 @@ The concrete implementation depends on the kind of database you want to use. The
 
        var result = await myService.DoSomething(job.Parameters, cancellationToken);
 
-       return new TestResult
+       return new SampleResult
        {
          MyProp = result.Something,
        };
@@ -267,12 +273,12 @@ The concrete implementation depends on the kind of database you want to use. The
    - `GetInitialJobParameters` is called when you set `AddInitialJob` in your settings to true. This way the worker will call this method to get the parameters of the first job.
    - The `PreJobRunHook` is called once before the worker checks if a job is available and can be used for custom logic. For example you could generate a correlation id and set it to the log context for following logs.
    - The `PostJobRunHook` is called once after a job run and can be used for custom cleanup logic. For example you could remove a previously set correlation id from the log context. The post hook is also called when no job was actually executed.
-   - The `ProcessJobAsync` method is where you put your logic to actually process the job. it is only called when a job to execute exists and contains the job, a service scope for this execution and a CancellationToken. If your job has a result you should return it from this method.
+   - The `ProcessJobAsync` method is where you put your logic to actually process the job. It is only called when a job to execute exists and contains the job, a service scope for this execution and a CancellationToken. If your job has a result you should return it from this method.
 
 9. Add your worker as a hosted service.
 
    ```cs
-   services.AddHostedService<DeleteVisitorWorker>();
+   services.AddHostedService<SampleWorker>();
    ```
 
 10. Generate Migration to add or update the Job table.
@@ -363,7 +369,7 @@ The worker service can be used in JavaScript/TypeScript projects.
      public getInitialJobParameters(): string[] | undefined {
        return undefined;
      }
-     
+
      public preJobRunHook(): void {
        // Optional: run any things you want before each job run.
        // This will be executed before checking if there is a job to execute
@@ -386,7 +392,7 @@ The worker service can be used in JavaScript/TypeScript projects.
          if (cancellationToken.aborted) {
            break;
          }
-         
+
          try {
            // Do you job handling here
          } catch (err) {
@@ -416,10 +422,10 @@ The worker service can be used in JavaScript/TypeScript projects.
      checkInput: true
    };
    const abortController = new AbortController();
-   
+
    const worker = new ExampleWorker(settings, exampleRepo, undefined); // Optional provide a logger factory
    const executePromise = worker.executeAsync(abortController.signal);
-   
+
    // When you want to stop the worker (e.g. shutting down the app) use the controller to abort
    abortController.abort(new Error("App is shutting down"));
    await executePromise; // Promise will resolve once the worker finished processing the current job or reset it if cancellationToken.throwIfAborted(); was used
@@ -484,6 +490,7 @@ The worker will delete jobs the first time it runs and than every 24 hours. The 
 **Note:** You can specify `TimeSpan` values via `appsettings.json` by following [Standard TimeSpan format strings](https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-timespan-format-strings).
 
 In `NodeJS` you can give an object with `days`, `hours`, `minutes`, `seconds` or a combination of those. For example, to remove jobs older than 6 months you could set this in you `config.json`:
+
 ```json
 {
   "someWorker": {
@@ -500,6 +507,7 @@ In `NodeJS` you can give an object with `days`, `hours`, `minutes`, `seconds` or
 The job worker currently implements two metrics using the [.NET metrics](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/metrics). The static Meter is protected, so your worker can use it to add its own metrics to it.
 
 For example you can create a counter and then add to it:
+
 ```cs
 public class MyWorker : JobWorkerBase<void, void>
 {
@@ -524,3 +532,27 @@ Implementing proper health checking of your job worker is up to you, however the
 The protected properties `LastJobExecutionStart` and `LastJobExecutionStop` (`lastJobExecutionStart` and `lastJobExecutionStop` in NodeJS) are set each time the main execution loop starts and ends. This can be used (along with `JobPollingIntervalSeconds` from worker settings) to calculate if the loop is still beeing executed.
 
 You can also retrieve basic worker metrics so you know about last time a job actually finished and how long it took to process.
+
+# Development
+
+## Tests
+
+To run tests a PostgreSQL server will be needed. If you already have one you can add a appsettings file to `test/DroidSolutions.Oss.JobService.Postgres.Test/appsettings.LocalTest.json` and configure the `DataContext` connection string.
+
+The basic setup for a PostgreSQL container would be the following (you can replace `podman` with `docker`):
+
+```bash
+podman run --name postgres -e POSTGRES_USER=integrationtest -e POSTGRES_PASSWORD=password -e POSTGRES_DB=integrationtest -d -p 5432:5432 postgres
+```
+
+Your `appsettings.LocalTest.json` file could then look like this:
+
+```json
+{
+  "ConnectionStrings": {
+    "DataContext": "Host=localhost;Database=integrationtest;Username=integrationtest;Password=password;Include Error Detail=true"
+  }
+}
+```
+
+After this you should be able to run `dotnet test` with success.
