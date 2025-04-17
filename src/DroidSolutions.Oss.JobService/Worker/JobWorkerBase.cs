@@ -125,15 +125,23 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   /// <summary>
   /// Hook that is called when a job run starts.
   /// </summary>
-  protected virtual void PreJobRunHook()
+  /// <param name="cancellationToken">A token to cancel the operation.</param>
+  /// <returns>A ValueTask that represents the asynchronous operation.</returns>
+  [TsFunction(Type = "Promise<void>")]
+  protected virtual ValueTask PreJobRunHookAsync([TsParameter(Type = "AbortSignal")] CancellationToken cancellationToken)
   {
+    return ValueTask.CompletedTask;
   }
 
   /// <summary>
   /// Hook that is called when a job run ends.
   /// </summary>
-  protected virtual void PostJobRunHook()
+  /// <param name="cancellationToken">A token to cancel the operation.</param>
+  /// <returns>A ValueTask that represents the asynchronous operation.</returns>
+  [TsFunction(Type = "Promise<void>")]
+  protected virtual ValueTask PostJobRunHookAsync([TsParameter(Type = "AbortSignal")] CancellationToken cancellationToken)
   {
+    return ValueTask.CompletedTask;
   }
 
   /// <summary>
@@ -175,11 +183,11 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
 
       try
       {
-        PreJobRunHook();
+        await PreJobRunHookAsync(stoppingToken);
         JobWorkerSettings settings = _workerSettings.CurrentValue;
         executed = await HandleJobRunAsync(settings, stoppingToken, isFirstRun);
 
-        PostJobRunHook();
+        await PostJobRunHookAsync(stoppingToken);
         isFirstRun = false;
       }
       catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

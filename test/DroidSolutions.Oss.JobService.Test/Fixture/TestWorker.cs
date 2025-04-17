@@ -55,10 +55,10 @@ public class TestWorker : JobWorkerBase<SampleParameter, SampleResult>
     await AddFailedProgressAsync(progress);
   }
 
-  protected override void PostJobRunHook()
+  protected override ValueTask PostJobRunHookAsync(CancellationToken cancellationToken)
   {
-    base.PostJobRunHook();
     PostHookCalled = true;
+    return base.PostJobRunHookAsync(cancellationToken);
   }
 
   protected override string GetRunnerName()

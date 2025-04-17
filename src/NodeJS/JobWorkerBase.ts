@@ -101,12 +101,12 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
    * A hook that is called before a worker runs. Thisi s called before the job is fetched so it might be that no job is
    * available.
    */
-  public abstract preJobRunHook(): void;
+  public abstract preJobRunHookAsync(cancellationToken: AbortSignal): Promise<void>;
 
   /**
    * A hook that is called after the job is finished Is also called when no job was available.
    */
-  public abstract postJobRunHook(): void;
+  public abstract postJobRunHookAsync(cancellationToken: AbortSignal): Promise<void>;
 
   /**
    * Should contain the logic needed to handle the job. The promise should resolve to the result of the job.
@@ -118,9 +118,8 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
   /**
    * Starts the worker. After a configurable initial delay it will frequently poll for new jobs and take the one with
-   * the oldest due date. Each runs calls @see preJobRunHook @see processJobAsync and @see postJobRunHook . If no job is
-   * available @see processJobAsync is not called.
-   * To stop the worker use the provided stoppingToken.
+   * the oldest due date. Each runs calls @see preJobRunHookAsync @see processJobAsync and @see postJobRunHookAsync .
+   * If no job is available @see processJobAsync is not called. To stop the worker use the provided stoppingToken.
    * @param {AbortSignal} stoppingToken A token that can be used to stop the worker.
    */
   public async executeAsync(stoppingToken: AbortSignal): Promise<void> {
@@ -142,9 +141,9 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
       const executed = false;
       this.lastJobExecutionStart = process.hrtime.bigint();
       try {
-        this.preJobRunHook();
+        await this.preJobRunHookAsync(stoppingToken);
         await this.handleJobRunAsync(this.settings, stoppingToken, firstRun);
-        this.postJobRunHook();
+        await this.postJobRunHookAsync(stoppingToken);
 
         firstRun = false;
       } catch (err) {

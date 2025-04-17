@@ -240,15 +240,17 @@ The concrete implementation depends on the kind of database you want to use. The
      }
 
      // optional
-     protected override void PreJobRunHook()
+     protected override ValueTask PreJobRunHookAsync(CancellationToken cancellationToken)
      {
        // optional logic before a job run starts
+       return ValueTask.CompletedTask;
      }
 
      // optional
-     protected override void PostJobRunHook()
+     protected override ValueTask PostJobRunHookAsync(CancellationToken cancellationToken)
      {
        // optional logic after a job is complete
+       return ValueTask.CompletedTask;
      }
 
      /// <inheritdoc/>
@@ -271,8 +273,8 @@ The concrete implementation depends on the kind of database you want to use. The
 
    - The `GetRunnerName` method should return a string that is unique for this worker class. The base implementation will add a random string to it so it is distinguishable if your application is running in more than one instance.
    - `GetInitialJobParameters` is called when you set `AddInitialJob` in your settings to true. This way the worker will call this method to get the parameters of the first job.
-   - The `PreJobRunHook` is called once before the worker checks if a job is available and can be used for custom logic. For example you could generate a correlation id and set it to the log context for following logs.
-   - The `PostJobRunHook` is called once after a job run and can be used for custom cleanup logic. For example you could remove a previously set correlation id from the log context. The post hook is also called when no job was actually executed.
+   - The `PreJobRunHookAsync` is called once before the worker checks if a job is available and can be used for custom logic. For example you could generate a correlation id and set it to the log context for following logs or notify a health check that the worker is still running and trying to process jobs.
+   - The `PostJobRunHookAsync` is called once after a job run and can be used for custom cleanup logic. For example you could remove a previously set correlation id from the log context. The post hook is also called when no job was actually executed.
    - The `ProcessJobAsync` method is where you put your logic to actually process the job. It is only called when a job to execute exists and contains the job, a service scope for this execution and a CancellationToken. If your job has a result you should return it from this method.
 
 9. Add your worker as a hosted service.
@@ -370,14 +372,16 @@ The worker service can be used in JavaScript/TypeScript projects.
        return undefined;
      }
 
-     public preJobRunHook(): void {
+     public preJobRunHookAsync(cancellationToken: AbortSignal): Promise<void> {
        // Optional: run any things you want before each job run.
        // This will be executed before checking if there is a job to execute
+       return Promise.resolve();
      }
 
-     public postJobRunHook(): void {
+     public postJobRunHook(cancellationToken: AbortSignal): Promise<void> {
        // Optional: run any things for cleanup
        // This will be executed after each job, even if there was no job to execute
+       return Promise.resolve();
      }
 
      public async processJobAsync(job: IJob<string[], ExampleResult>, cancellationToken: AbortSignal): Promise<ExampleResult> {
