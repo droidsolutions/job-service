@@ -1,3 +1,10 @@
+# [4.0.0-develop.2](https://github.com/droidsolutions/job-service/compare/v4.0.0-develop.1...v4.0.0-develop.2) (2025-04-17)
+
+
+### Features
+
+* clear job items when reset job ([5a94156](https://github.com/droidsolutions/job-service/commit/5a941563cb8b35c24a8576835d299863f913d0e7))
+
 # [4.0.0-develop.1](https://github.com/droidsolutions/job-service/compare/v3.6.0...v4.0.0-develop.1) (2025-04-17)
 
 

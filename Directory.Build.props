@@ -14,8 +14,8 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryBranch>main</RepositoryBranch>
-    <RepositoryCommit>8f7cef71d4cd1e70213df35b01830a1be5c4d617</RepositoryCommit>
-    <Version>4.0.0-develop.1</Version>
+    <RepositoryCommit>5a941563cb8b35c24a8576835d299863f913d0e7</RepositoryCommit>
+    <Version>4.0.0-develop.2</Version>
   </PropertyGroup>
   
   <ItemGroup>
