@@ -294,7 +294,8 @@ public class PostgresJobRepositoryTest
   [Fact]
   public async Task AddProgress_ShouldThrowInvalidOperationException_WhenGivenJobDoesNotExist()
   {
-    var job = new Job<SampleParameter, SampleResult>() { Id = 122 };
+    await _setup.Context.SaveChangesAsync(TestContext.Current.CancellationToken); // Save so no pending changes
+    Job<SampleParameter, SampleResult> job = new() { Id = 122 };
     Func<Task> act = async () => await _sut.AddProgressAsync(job, 1, false, TestContext.Current.CancellationToken);
     await act.Should()
       .ThrowAsync<InvalidOperationException>()
