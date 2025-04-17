@@ -4,7 +4,7 @@
     <CoverletOutput>$(MSBuildThisFileDirectory)../coverage/</CoverletOutput>
     <MergeWith>$(MSBuildThisFileDirectory)../coverage/coverage.json</MergeWith>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <UseMicrosoftTestingPlatformRunner>false</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
   <ItemGroup>
