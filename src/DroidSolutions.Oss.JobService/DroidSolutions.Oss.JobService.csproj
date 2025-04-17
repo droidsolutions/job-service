@@ -12,11 +12,13 @@
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
+  <!-- <Target Name="CompileTypeScript" /> -->
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.4" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.4" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.4" />
     <PackageReference Include="Nanoid" Version="3.1.0" />
-    <PackageReference Include="Reinforced.Typings" Version="1.6.5"/>
+    <PackageReference Include="Reinforced.Typings" Version="1.6.5" />
   </ItemGroup>
 </Project>
