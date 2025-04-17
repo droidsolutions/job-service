@@ -45,7 +45,7 @@ jobs:
           - 5432:5432
     steps:
       - uses: actions/checkout@v4
-      - run: dotnet test /p:CollectCoverage=true
+      - run: dotnet test /p:CollectCoverage=true /p:ParallelizeTestCollections=false
       - name: publish coverage report to coveralls.io
         uses: coverallsapp/github-action@v2.3.6
         with:
