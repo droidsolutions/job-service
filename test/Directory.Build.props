@@ -3,7 +3,7 @@
     <CoverletOutputFormat>json,opencover,lcov</CoverletOutputFormat>
     <CoverletOutput>$(MSBuildThisFileDirectory)../coverage/</CoverletOutput>
     <MergeWith>$(MSBuildThisFileDirectory)../coverage/coverage.json</MergeWith>
-    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <TestingPlatformDotnetTestSupport>false</TestingPlatformDotnetTestSupport>
     <UseMicrosoftTestingPlatformRunner>false</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
