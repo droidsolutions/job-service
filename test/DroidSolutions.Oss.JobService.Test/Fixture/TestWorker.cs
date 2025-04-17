@@ -13,29 +13,29 @@ using Microsoft.Extensions.Options;
 
 namespace DroidSolutions.Oss.JobService.Test.Fixture;
 
-public class TestWorker : JobWorkerBase<TestParameter, TestResult>
+public class TestWorker : JobWorkerBase<SampleParameter, SampleResult>
 {
-  private Func<IJob<TestParameter, TestResult>, Task<TestResult?>>? _processFunc;
+  private Func<IJob<SampleParameter, SampleResult>, Task<SampleResult?>>? _processFunc;
 
   public TestWorker(JobWorkerSettings settings, IServiceProvider serviceProvider)
     : this(
         new TestOptionsMonitor(settings),
         serviceProvider,
-        new NullLoggerFactory().CreateLogger<JobWorkerBase<TestParameter, TestResult>>())
+        new NullLoggerFactory().CreateLogger<JobWorkerBase<SampleParameter, SampleResult>>())
   {
   }
 
   public TestWorker(
     IOptionsMonitor<JobWorkerSettings> workerSettings,
     IServiceProvider serviceProvider,
-    ILogger<JobWorkerBase<TestParameter, TestResult>> logger)
+    ILogger<JobWorkerBase<SampleParameter, SampleResult>> logger)
     : base(workerSettings, serviceProvider, logger)
   {
   }
 
   public bool PostHookCalled { get; private set; }
 
-  public void SetProcessFunction(Func<IJob<TestParameter, TestResult>, Task<TestResult?>> func)
+  public void SetProcessFunction(Func<IJob<SampleParameter, SampleResult>, Task<SampleResult?>> func)
   {
     _processFunc = func;
   }
@@ -66,19 +66,19 @@ public class TestWorker : JobWorkerBase<TestParameter, TestResult>
     return "TestWorker";
   }
 
-  protected override TestParameter? GetInitialJobParameters()
+  protected override SampleParameter? GetInitialJobParameters()
   {
     base.GetInitialJobParameters(); // For that extra line of coverage ¯\_(ツ)_/¯
 
-    return new TestParameter("something");
+    return new SampleParameter("something");
   }
 
-  protected override Task<TestResult?> ProcessJobAsync(
-    IJob<TestParameter, TestResult> job,
+  protected override Task<SampleResult?> ProcessJobAsync(
+    IJob<SampleParameter, SampleResult> job,
     IServiceScope serviceScope,
     CancellationToken cancellationToken)
   {
-    return _processFunc?.Invoke(job) ?? Task.FromResult<TestResult?>(new TestResult
+    return _processFunc?.Invoke(job) ?? Task.FromResult<SampleResult?>(new SampleResult
     {
       CheckedSomething = true,
       IgnoredItems = 12,

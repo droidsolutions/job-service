@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DroidSolutions.Oss.JobService.Postgres.Test.Fixture;
 
-public class TestContext : DbContext, IJobContext
+public class SampleContext : DbContext, IJobContext
 {
-  public TestContext([NotNull] DbContextOptions options)
+  public SampleContext([NotNull] DbContextOptions options)
     : base(options)
   {
   }
@@ -18,6 +18,6 @@ public class TestContext : DbContext, IJobContext
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
-    modelBuilder.Entity<Job<TestParameter, TestResult>>();
+    modelBuilder.Entity<Job<SampleParameter, SampleResult>>();
   }
 }

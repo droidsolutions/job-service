@@ -22,29 +22,29 @@ public class PostgresDbSetup : IAsyncLifetime
     var factory = new LoggerFactory();
     factory.AddProvider(new ConsoleLoggerProvider());
 
-    DbContextOptionsBuilder<TestContext>? dbContextBuilder = new DbContextOptionsBuilder<TestContext>()
+    DbContextOptionsBuilder<SampleContext>? dbContextBuilder = new DbContextOptionsBuilder<SampleContext>()
       .UseNpgsql(config.GetConnectionString("DataContext"))
       // .UseLoggerFactory(factory)
       .EnableSensitiveDataLogging(true);
 
-    Context = new TestContext(dbContextBuilder.Options);
+    Context = new SampleContext(dbContextBuilder.Options);
   }
 
-  public TestContext Context { get; }
+  public SampleContext Context { get; }
 
   public void Dispose()
   {
     Context?.Dispose();
   }
 
-  public Task DisposeAsync()
+  public ValueTask DisposeAsync()
   {
     Context?.Dispose();
 
-    return Task.CompletedTask;
+    return ValueTask.CompletedTask;
   }
 
-  public async Task InitializeAsync()
+  public async ValueTask InitializeAsync()
   {
     // clear test db by removing it and re-creating it
     if (Environment.GetEnvironmentVariable("CI") == "true")

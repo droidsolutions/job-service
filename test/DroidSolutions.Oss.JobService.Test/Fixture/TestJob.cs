@@ -4,7 +4,7 @@ using DroidSolutions.Oss.JobService;
 
 namespace DroidSolutions.Oss.JobService.Test.Fixture;
 
-public class TestJob : IJob<TestParameter, TestResult>
+public class TestJob : IJob<SampleParameter, SampleResult>
 {
   public long Id { get; set; }
   public DateTime CreatedAt { get; set; }
@@ -15,8 +15,8 @@ public class TestJob : IJob<TestParameter, TestResult>
   public int? TotalItems { get; set; }
   public int? SuccessfulItems { get; set; }
   public int? FailedItems { get; set; }
-  public TestParameter? Parameters { get; set; }
-  public TestResult? Result { get; set; }
+  public SampleParameter? Parameters { get; set; }
+  public SampleResult? Result { get; set; }
   public string? Runner { get; set; }
   public uint? ProcessingTimeMs { get; set; }
 }

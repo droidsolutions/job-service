@@ -11,9 +11,9 @@ using Microsoft.Extensions.Logging;
 
 namespace DroidSolutions.Oss.JobService.EFCore.Test.Fixture;
 
-public class InMemoryJobRepository : JobRepositoryBase<TestContext, TestParameter, TestResult>
+public class InMemoryJobRepository : JobRepositoryBase<SampleContext, SampleParameter, SampleResult>
 {
-  public InMemoryJobRepository(TestContext context, ILogger logger)
+  public InMemoryJobRepository(SampleContext context, ILogger logger)
     : base(context, logger)
   {
   }
@@ -38,16 +38,16 @@ public class InMemoryJobRepository : JobRepositoryBase<TestContext, TestParamete
     await Context.SaveChangesAsync(cancellationToken);
   }
 
-  public override async Task<IJob<TestParameter, TestResult>?> FindExistingJobAsync(
+  public override async Task<IJob<SampleParameter, SampleResult>?> FindExistingJobAsync(
     string type,
     DateTime? dueDate,
-    TestParameter? parameters,
+    SampleParameter? parameters,
     bool includeStarted = false,
     CancellationToken cancellationToken = default)
   {
-    IQueryable<Job<TestParameter, TestResult>> query = Context.Jobs
+    IQueryable<Job<SampleParameter, SampleResult>> query = Context.Jobs
       .Where(x => x.Type == type)
-      .Cast<Job<TestParameter, TestResult>>();
+      .Cast<Job<SampleParameter, SampleResult>>();
 
     if (includeStarted)
     {
@@ -68,20 +68,20 @@ public class InMemoryJobRepository : JobRepositoryBase<TestContext, TestParamete
       // ToDo do we need this for base repo tests?
     }
 
-    Job<TestParameter, TestResult>? job = await query.FirstOrDefaultAsync(cancellationToken);
+    Job<SampleParameter, SampleResult>? job = await query.FirstOrDefaultAsync(cancellationToken);
     DeserializeParameters(job);
 
     return job;
   }
 
-  public override async Task<IJob<TestParameter, TestResult>?> GetAndStartFirstPendingJobAsync(
+  public override async Task<IJob<SampleParameter, SampleResult>?> GetAndStartFirstPendingJobAsync(
     string type,
     string runner,
     CancellationToken cancellationToken = default)
   {
-    Job<TestParameter, TestResult>? job = await Context.Jobs
+    Job<SampleParameter, SampleResult>? job = await Context.Jobs
       .OrderBy(x => x.DueDate)
-      .Cast<Job<TestParameter, TestResult>>()
+      .Cast<Job<SampleParameter, SampleResult>>()
       .FirstOrDefaultAsync(
         x => x.State == JobState.Requested && x.Type == type && x.DueDate <= DateTime.UtcNow,
         cancellationToken);
