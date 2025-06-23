@@ -98,7 +98,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
   public abstract getInitialJobParameters(): TParams | undefined;
 
   /**
-   * A hook that is called before a worker runs. Thisi s called before the job is fetched so it might be that no job is
+   * A hook that is called before a worker runs. This is called before the job is fetched so it might be that no job is
    * available.
    */
   public abstract preJobRunHookAsync(cancellationToken: AbortSignal): Promise<void>;
