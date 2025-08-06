@@ -51,7 +51,7 @@
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-jsdoc": "52.0.4",
     "eslint-plugin-n": "17.21.3",
-    "eslint-plugin-prettier": "5.5.3",
+    "eslint-plugin-prettier": "5.5.4",
     "husky": "9.1.7",
     "semantic-release": "24.2.7",
     "typescript": "5.9.2",
