@@ -7,7 +7,7 @@ export type { IJobWorkerMetrics } from "./Generated/Worker/IJobWorkerMetrics";
 export type { IJobWorkerSettings } from "./Generated/Worker/Settings/IJobWorkerSettings";
 export { EmtpyLogger } from "./Helper/LoggerFactory";
 export type { LoggerFactory, SimpleLogger } from "./Helper/LoggerFactory";
-// eslint-disable-next-line @typescript-eslint/no-depcrecated
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export { transformDateToUtc } from "./Helper/TimeHelper";
 export { JobWorkerBase } from "./JobWorkerBase";
 export type { TimeSpan } from "./types";
