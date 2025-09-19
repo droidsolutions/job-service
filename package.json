@@ -49,7 +49,7 @@
     "@types/node": "24.5.2",
     "eslint": "9.35.0",
     "eslint-config-prettier": "10.1.8",
-    "eslint-plugin-jsdoc": "59.0.1",
+    "eslint-plugin-jsdoc": "59.0.2",
     "eslint-plugin-n": "17.23.1",
     "eslint-plugin-prettier": "5.5.4",
     "husky": "9.1.7",
