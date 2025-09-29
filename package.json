@@ -55,7 +55,7 @@
     "husky": "9.1.7",
     "semantic-release": "24.2.9",
     "typescript": "5.9.2",
-    "typescript-eslint": "8.44.1"
+    "typescript-eslint": "8.45.0"
   },
   "commitlint": {
     "extends": [
