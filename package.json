@@ -54,7 +54,7 @@
     "eslint-plugin-prettier": "5.5.4",
     "husky": "9.1.7",
     "semantic-release": "24.2.9",
-    "typescript": "5.9.2",
+    "typescript": "5.9.3",
     "typescript-eslint": "8.45.0"
   },
   "commitlint": {
