@@ -12,7 +12,7 @@ jobs:
           dotnet-version: "8.0.x"
       - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 24
       - run: dotnet build
       - run: npm ci
       - run: npx tsc
@@ -31,7 +31,7 @@ jobs:
     services:
       # Label used to access the service container
       postgres:
-        image: postgres:14
+        image: postgres:16
         env:
           POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: apitest
@@ -65,7 +65,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 24
       - uses: actions/setup-dotnet@v5.0.0
         with:
           dotnet-version: "8.0.x"
