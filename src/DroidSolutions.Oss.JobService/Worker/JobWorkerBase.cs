@@ -312,7 +312,10 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
         _logger.LogDebug("Start processing job.");
         _currentJob.Result = await ProcessJobAsync(_currentJob, serviceScope, cancellationToken);
         TimeSpan? nextJobIn = AddNextJobIn(settings, _currentJob.Result);
-        await _jobRepository.FinishJobAsync(_currentJob, nextJobIn, cancellationToken);
+
+        // Prevent reset of the job if the app shuts during FinishJobAsync
+        await _jobRepository.FinishJobAsync(_currentJob, nextJobIn, CancellationToken.None);
+        _logger.LogDebug("Finished job.");
 
         _executedJobs++;
         ExecutedJobsCounter.Add(1, new KeyValuePair<string, object?>("type", _currentJob.Type));
@@ -326,8 +329,8 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
           _currentJob.Id,
           ex.Message);
 
-        // Since operation was cancelled (probably cause app is shutting down) no sense in forwarding our token
-        await _jobRepository.ResetJobAsync(_currentJob, default);
+        // Since the operation was canceled (probably because the app is shutting down) no sense in forwarding our token
+        await _jobRepository.ResetJobAsync(_currentJob, CancellationToken.None);
 
         if (ex is OperationCanceledException && cancellationToken.IsCancellationRequested)
         {
@@ -348,7 +351,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
       {
         await DeleteOldJobs(settings.DeleteJobsOlderThan.Value, settings.JobType, cancellationToken);
       }
-      catch (Exception ex)
+      catch (Exception ex) when (ex is not OperationCanceledException)
       {
         _logger.LogError(ex, "Error deleting old jobs: {Message}", ex.Message);
       }
