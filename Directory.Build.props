@@ -13,8 +13,8 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryBranch>main</RepositoryBranch>
-    <RepositoryCommit>5a941563cb8b35c24a8576835d299863f913d0e7</RepositoryCommit>
-    <Version>4.0.0-develop.2</Version>
+    <RepositoryCommit>f767cad9978f75d78e9fe4f5981b21e21f344f8f</RepositoryCommit>
+    <Version>4.0.0-develop.3</Version>
   </PropertyGroup>
   
   <ItemGroup>

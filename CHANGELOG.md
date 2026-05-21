@@ -1,3 +1,26 @@
+# [4.0.0-develop.3](https://github.com/droidsolutions/job-service/compare/v4.0.0-develop.2...v4.0.0-develop.3) (2026-05-21)
+
+
+### Bug Fixes
+
+* **JobWorkerBase.cs:** fix cancelation handling when finishing job ([bbea38a](https://github.com/droidsolutions/job-service/commit/bbea38a9446be99f10692a4370a9344528fad1b0))
+* **JobWorkerBase.ts:** correctly set lastJobDurationMs ([504e413](https://github.com/droidsolutions/job-service/commit/504e413f88e188dccce3916af0d51e82f9fa1ba9))
+* **JobWorkerBase.ts:** don't pass abortSignal to finishJobAsync and resetJobAsync ([958d53e](https://github.com/droidsolutions/job-service/commit/958d53e5163ad15e7c9a8701effcf516da7fcf5b))
+* **JobWorkerBase.ts:** set runner name before initial worker delay ([cbba774](https://github.com/droidsolutions/job-service/commit/cbba77408e3f41656b10d1fc9c73195c80684d43))
+
+
+### Features
+
+* **JobWorkerBase:** add ResetJobsStuckForMinutes setting ([d246ea5](https://github.com/droidsolutions/job-service/commit/d246ea5475a6f29ec4965e70f6e12d9dfa6835b2))
+* **Net:** update to .NET 10 ([49aeab3](https://github.com/droidsolutions/job-service/commit/49aeab32964c8b8d77de424b8c7c15c3c999d164))
+
+
+### BREAKING CHANGES
+
+* **Net:** This library now uses .NET 10
+
+Signed-off-by: Stefan Ißmer <stefan.issmer@droidsolutions.de>
+
 # [4.0.0-develop.2](https://github.com/droidsolutions/job-service/compare/v4.0.0-develop.1...v4.0.0-develop.2) (2025-04-17)
 
 
