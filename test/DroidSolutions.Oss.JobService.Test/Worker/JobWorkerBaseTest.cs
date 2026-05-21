@@ -74,15 +74,23 @@ public class JobWorkerBaseTest
       .Setup(x => x.GetAndStartFirstPendingJobAsync(_settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync(job);
 
+    TaskCompletionSource jobFinished = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    repoMock
+      .Setup(x => x.FinishJobAsync(
+        It.Is<TestJob>(j => j.Id == job.Id),
+        _settings.AddNextJobAfter,
+        It.IsAny<CancellationToken>()))
+      .Callback(() => jobFinished.TrySetResult())
+      .Returns(Task.CompletedTask);
+
     IServiceProvider provider = SetupDi(repoMock.Object);
 
     TestWorker worker = new(_settings, provider);
-
     CancellationTokenSource cts = new();
 
-    // Wait for the first run to complete
-    cts.CancelAfter(50);
-    await worker.StartAsync(cts.Token);
+    _ = worker.StartAsync(cts.Token);
+    await jobFinished.Task.WaitAsync(TestContext.Current.CancellationToken);
+    cts.Cancel();
 
     repoMock.Verify(
       x => x.GetAndStartFirstPendingJobAsync(_settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()),
