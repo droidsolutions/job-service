@@ -22,7 +22,6 @@
 
 * **Net:** This library now uses .NET 10
 
-Signed-off-by: Stefan Ißmer <stefan.issmer@droidsolutions.de>
 * (.NET) Pre- and PostJobRunHook are now async, take a CancellationToken and return a ValueTask
 and are also renamed to PreJobRunHookAsync and PostJobRunHookAsync
 * (NodeJS) pre- and postJobRunHook are now async, take an AbortSignal and return a Promise<void>
@@ -49,7 +48,6 @@ and are also renamed to preJobRunHookAsync and postJobRunHookAsync
 
 * **Net:** This library now uses .NET 10
 
-Signed-off-by: Stefan Ißmer <stefan.issmer@droidsolutions.de>
 
 # [4.0.0-develop.2](https://github.com/droidsolutions/job-service/compare/v4.0.0-develop.1...v4.0.0-develop.2) (2025-04-17)
 
