@@ -1,3 +1,33 @@
+# [4.0.0](https://github.com/droidsolutions/job-service/compare/v3.6.0...v4.0.0) (2026-05-21)
+
+
+### Bug Fixes
+
+* **JobWorkerBase.cs:** fix cancelation handling when finishing job ([bbea38a](https://github.com/droidsolutions/job-service/commit/bbea38a9446be99f10692a4370a9344528fad1b0))
+* **JobWorkerBase.ts:** correctly set lastJobDurationMs ([504e413](https://github.com/droidsolutions/job-service/commit/504e413f88e188dccce3916af0d51e82f9fa1ba9))
+* **JobWorkerBase.ts:** don't pass abortSignal to finishJobAsync and resetJobAsync ([958d53e](https://github.com/droidsolutions/job-service/commit/958d53e5163ad15e7c9a8701effcf516da7fcf5b))
+* **JobWorkerBase.ts:** set runner name before initial worker delay ([cbba774](https://github.com/droidsolutions/job-service/commit/cbba77408e3f41656b10d1fc9c73195c80684d43))
+
+
+### Features
+
+* allow async calls in worker Hooks ([c86570e](https://github.com/droidsolutions/job-service/commit/c86570e8a3fe502ace684b6e75ce9654b6eeac7c))
+* clear job items when reset job ([5a94156](https://github.com/droidsolutions/job-service/commit/5a941563cb8b35c24a8576835d299863f913d0e7))
+* **JobWorkerBase:** add ResetJobsStuckForMinutes setting ([d246ea5](https://github.com/droidsolutions/job-service/commit/d246ea5475a6f29ec4965e70f6e12d9dfa6835b2))
+* **Net:** update to .NET 10 ([49aeab3](https://github.com/droidsolutions/job-service/commit/49aeab32964c8b8d77de424b8c7c15c3c999d164))
+* upgrade project to .NET 9.0 ([c09f34c](https://github.com/droidsolutions/job-service/commit/c09f34c18693ee0a66b6372fb93aaf8315fff4d8))
+
+
+### BREAKING CHANGES
+
+* **Net:** This library now uses .NET 10
+
+Signed-off-by: Stefan Ißmer <stefan.issmer@droidsolutions.de>
+* (.NET) Pre- and PostJobRunHook are now async, take a CancellationToken and return a ValueTask
+and are also renamed to PreJobRunHookAsync and PostJobRunHookAsync
+* (NodeJS) pre- and postJobRunHook are now async, take an AbortSignal and return a Promise<void>
+and are also renamed to preJobRunHookAsync and postJobRunHookAsync
+
 # [4.0.0-develop.3](https://github.com/droidsolutions/job-service/compare/v4.0.0-develop.2...v4.0.0-develop.3) (2026-05-21)
 
 
