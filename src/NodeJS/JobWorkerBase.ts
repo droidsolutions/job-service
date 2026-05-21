@@ -124,10 +124,11 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
    */
   public async executeAsync(stoppingToken: AbortSignal): Promise<void> {
     this.cancellationToken = stoppingToken;
-    await this.delay(this.settings.initialDelaySeconds, stoppingToken);
-
     const runnerId = nanoid(7);
     this.runnerName = `${this.getRunnerName()}-${runnerId}`;
+
+    await this.delay(this.settings.initialDelaySeconds, stoppingToken);
+
     let firstRun = true;
     this.baseLogger.info(
       { runner: this.runnerName },
