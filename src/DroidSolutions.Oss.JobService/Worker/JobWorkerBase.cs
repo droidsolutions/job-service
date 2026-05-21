@@ -145,7 +145,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   }
 
   /// <summary>
-  /// Processes the job and returns the result if any.
+  /// Processes the job and returns the result, if any.
   /// </summary>
   /// <param name="job">The job.</param>
   /// <param name="serviceScope">A service scope for injecting additional services.</param>
@@ -309,6 +309,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
     {
       try
       {
+        _logger.LogDebug("Start processing job.");
         _currentJob.Result = await ProcessJobAsync(_currentJob, serviceScope, cancellationToken);
         TimeSpan? nextJobIn = AddNextJobIn(settings, _currentJob.Result);
         await _jobRepository.FinishJobAsync(_currentJob, nextJobIn, cancellationToken);
@@ -373,6 +374,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   {
     try
     {
+      _logger.LogDebug("Checking for next job.");
       return await repo.GetAndStartFirstPendingJobAsync(settings.JobType, RunnerName, cancellationToken);
     }
     catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
