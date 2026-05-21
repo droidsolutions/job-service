@@ -291,7 +291,9 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     if (this.currentJob) {
       try {
         this.currentJob.result = await this.processJobAsync(this.currentJob, cancellationToken);
-        await this.jobRepo.finishJobAsync(this.currentJob, settings.addNextJobAfter, cancellationToken);
+
+        // Don't pass cancellation token to prevent reset of the job if the app shuts down during FinishJobAsync
+        await this.jobRepo.finishJobAsync(this.currentJob, settings.addNextJobAfter, undefined);
 
         this.executedJobs++;
         executed = true;
@@ -303,7 +305,8 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
           (err as Error).message,
         );
 
-        await this.jobRepo.resetJobAsync(this.currentJob, cancellationToken);
+        // Don't pass cancellation token to properly reset the job if the app shuts down
+        await this.jobRepo.resetJobAsync(this.currentJob, undefined);
 
         // re-throw if cancellation error so job loop ends
         if (cancellationToken.aborted) {
