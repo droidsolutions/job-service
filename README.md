@@ -2,27 +2,27 @@
 
 Library to manage recurring jobs.
 
-The DroidSolutions Job service offers tools that help managing recurring jobs. It is split in multiple packages that are explained below. These contains NuGet packages for .NET 9 as well as an NPM package.
+The DroidSolutions Job service offers tools that help manage recurring jobs. It is split into multiple packages that are explained below. These contain NuGet packages for .NET 9 as well as an NPM package.
 
 Examples of jobs are:
 
 - check every hour for new entries in a database to process
 - download current information from an API every day
-- run a job to clean up no longer needed data
+- run a job to clean up no longer necessary data
 - delay a task coming from UI to execute at a later time
 
 ## Why not Cron?
 
-For recurring jobs you could also use a cronjob and there is nothing wrong with that. In general this library allows to have a similar experience like with a cron job with the following differences:
+For recurring jobs you could also use a cronjob and there is nothing wrong with that. In general this library allows having a similar experience like with a cron job with the following differences:
 
-- Jobs are not executed exactly at a given time. Instead they have a due date and whenever a runner is checking for a job it will execute the job with the oldest due date that's already passed. Depending on the check interval you configure there might be some time between due date and actual execution. In fact, jobs do not need to be recurring at all, you can use this library to manage one time jobs.
-- Job execution intervals are not always equal. When a job is executed and it is configured to add another job, the next job is added **after** the previous job is done executing. The next due date will be calculated from that point on, so time between jobs depend on the execution time and the configured interval.
+- Jobs are not executed exactly at a given time. Instead, they have a due date, and whenever a runner is checking for a job it will execute the job with the oldest due date that's already passed. Depending on the check interval you configure there might be some time between due date and actual execution. In fact, jobs do not need to be recurring at all; you can use this library to manage one time jobs.
+- Job execution intervals are not always equal. When a job is executed, and it is configured to add another job, the next job is added **after** the previous job is done executing. The next due date will be calculated from that point on, so time between jobs depends on the execution time and the configured interval.
 - Jobs are persistent, you have a storage for all jobs (presumably a database table) that you can use to display job executions or view results of the jobs.
-- Job execution can be integrated in your application. While a cronjob probably is an own piece of software or a script, the job worker can be integrated in your application and share code with it. This is useful when the job needs logic that other parts of your application also need. You also can easily dynamically add a job from your application logic if it is needed.
+- Job execution can be integrated in your application. While a cronjob probably is an own piece of software or a script, the job worker can be integrated in your application and share code with it. This is useful when the job needs logic that other parts of your application also need. You also can easily dynamically add a job from your application logic if it is necessary.
 
 # Packages
 
-This section describes which packages are availabe for which eco systems.
+This section describes which packages are available for which ecosystems.
 
 ## DroidSolutions.Oss.JobService
 
@@ -38,7 +38,7 @@ This NuGet package contains a concrete implementation of the IJobRepository with
 
 ## @droidsolutions-oss/job-service
 
-This NPM package contains TypeScript interfaces that are generated from the .NET interfaces of the [DroidSolutions.Oss.JobService package](#droidsolutions-ossjob-service) and an abstract `JobWorkerBase` class. These can be used for a NodeJS implementation of the job repository and the worker service.
+This NPM package contains TypeScript interfaces that are generated from the .NET interfaces of the [DroidSolutions.Oss.JobService package](#droidsolutions-ossjob-service) and an abstract `JobWorkerBase` class. These can be used for a Node.js implementation of the job repository and the worker service.
 
 # Interfaces and Classes
 
@@ -64,21 +64,21 @@ This interface is available in C# as well as [TypeScript](https://www.typescript
 
 Jobs are generic, where the type arguments are meant for parameters and the result that a job can have. Those can be serialized to and from JSON when interacting with the database.
 
-There is a concrete implementations of `IJob<TParams, TResult>` for [Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/) in the [DroidSolutions.Oss.JobService.EFCore package](#droidsolutionsossjobserviceefcore).
+There is a concrete implementation of `IJob<TParams, TResult>` for [Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/) in the [DroidSolutions.Oss.JobService.EFCore package](#droidsolutionsossjobserviceefcore).
 
 ### Entity Framework Core specifics
 
 The `JobBase` class is a concrete implementation of the `IJobBase` interface which has annotations that may be useful when using it as an entity for [Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/).
 
-The `Job<TParams, TResult>` class is an extension that implementats the `IJob<TParams, TResult>` interface. The parameters and results are currently directly mapped to `jsonb` column for [PostgreSQL](https://www.postgresql.org/docs/current/datatype-json.html).
+The `Job<TParams, TResult>` class is an extension that implements the `IJob<TParams, TResult>` interface. The parameters and results are currently directly mapped to `jsonb` column for [PostgreSQL](https://www.postgresql.org/docs/current/datatype-json.html).
 
-Internally the properties for parameter and result are mapped to fields in the database to allow interoperatibility with NodeJS or other projects. This means there are `ParametersSerialized` and `ResultSerialized` properties that contain the JSON string and are mapped to the database where the `Parameters` and `Result` properties contain the actual deserialized values for you to use.
+Internally, the properties for parameter and result are mapped to fields in the database to allow interoperability with Node.js or other projects. This means there are `ParametersSerialized` and `ResultSerialized` properties that contain the JSON string and are mapped to the database where the `Parameters` and `Result` properties contain the actual deserialized values for you to use.
 
 When implementing your own `IJobRepository<TParams, TResult>` you are responsible for serializing and deserializing the values yourself.
 
 ## IJobRepository<TParams, TResult>
 
-There is a C# and a TypeScript interface for a repository that works with the job entity. It can be implemented to serve as a wrapper for database related actions. The generic type parameters are the same as for jobs, so a repository is repsonsible for exactly one type of jobs. The repository acts as the data layer of the application and wraps around all database interaction regarding jobs.
+There is a C# and a TypeScript interface for a repository that works with the job entity. It can be implemented to serve as a wrapper for database-related actions. The generic type parameters are the same as for jobs, so a repository is repsonsible for exactly one type of jobs. The repository acts as the data layer of the application and wraps around all database interaction regarding jobs.
 
 Like for the job there are concrete implementations for EF Core and TypeORM.
 
@@ -86,7 +86,7 @@ Like for the job there are concrete implementations for EF Core and TypeORM.
 
 On the .NET side there is an interface `IJobContext` that can be implemented in your DbContext. This uses the `JobBase` class which has annotations that may be useful when using it as an entity for [Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/).
 
-The `JobRepositoryBase<TContext, TParams, TResult>` is a full implementation of the `IJobRepository<TParams, TResult>` interface using the `Job<TParams, TResult>` entity where necessary. Parameters and results are optional, that's why the `IJobContext` only uses the `BaseJob` entity. The `JobRepositoryBase<TContext, TParams, TResult>` handles checks for parameter and result existence and uses `JobBase` where they don't apply. If they are needed, `JobBase` entities are casted to `Job<TParams, TResult>`. For this to work, your `DbContext` must register the entity, for example like this:
+The `JobRepositoryBase<TContext, TParams, TResult>` is a full implementation of the `IJobRepository<TParams, TResult>` interface using the `Job<TParams, TResult>` entity where necessary. Parameters and results are optional, that's why the `IJobContext` only uses the `BaseJob` entity. The `JobRepositoryBase<TContext, TParams, TResult>` handles checks for parameter and result existence and uses `JobBase` where they don't apply. If they are needed, `JobBase` entities are cast to `Job<TParams, TResult>`. For this to work, your `DbContext` must register the entity, for example like this:
 
 ```cs
 public class TestContext : DbContext, IJobContext
@@ -101,7 +101,7 @@ public class TestContext : DbContext, IJobContext
 }
 ```
 
-To allow interoperatibility with job workers that use NodeJS the parameters and result are serialized with special options using camelCase property names. This can be extended or overwritten via the protected `GetSerializerOptions` method. In the background the `Job<TParams, TResult>` class has `ParametersSerialized` and `ResultSerialized` properties that hold the converted json and act as the actual database columns. The repository handles this in all methods where it is necessary so you shouldn't have to do this yourself.
+To allow interoperability with job workers that use Node.js the parameters and result are serialized with special options using camelCase property names. This can be extended or overwritten via the protected `GetSerializerOptions` method. In the background the `Job<TParams, TResult>` class has `ParametersSerialized` and `ResultSerialized` properties that hold the converted json and act as the actual database columns. The repository handles this in all methods where it is necessary so you shouldn't have to do this yourself.
 
 Adding jobs, starting jobs and setting job progress is done via transactions and table or row locks. This ensures no two parallel running workers can receive the same job or work on the same job.
 
@@ -295,7 +295,7 @@ The worker service can be used in JavaScript/TypeScript projects.
    npm install @droidsolutions-oss/job-service
    ```
 
-2. Create an implementation of the `IJobRepository<TParams, TResult>` interface. If you are using TypeORM you can use the `@droidsolutions-oss/job-service-typeorm` package which already comes with an implemantation of the interface. Otherwise you can implement it with the database layer of your choice. In TypeScript it would look like this (note [Prisma](prisma.io) is used in this example):
+2. Create an implementation of the `IJobRepository<TParams, TResult>` interface. If you are using TypeORM you can use the `@droidsolutions-oss/job-service-typeorm` package which already comes with an implementation of the interface. Otherwise, you can implement it with the database layer of your choice. In TypeScript, it would look like this (note [Prisma](prisma.io) is used in this example):
 
    ```ts
    import { IJob, IJobRepository, JobState } from "@droidsolutions-oss/job-service";
@@ -388,7 +388,7 @@ The worker service can be used in JavaScript/TypeScript projects.
        // You can safely throw here, it will be catched by JobWorkerBase
        cancellationToken.throwIfAborted();
        const result: ExampleResult = {
-         errors: [];
+         errors: [],
        }
 
        for (const input of job.parameters)
@@ -418,7 +418,7 @@ The worker service can be used in JavaScript/TypeScript projects.
    import { ExampleResult, ExampleWorker } from "./worker/ExampleWorker";
 
    const prismaClient = new PrismaClient();
-   const exampleRepo = new JobRepository<string[], ExampleResult>>(prismaClient);
+   const exampleRepo = new JobRepository<string[], ExampleResult>(prismaClient);
    const settings: MyWorkerSettings = {
      addInitialJob: true, // Create a job if none exists
      addNextJobAfter: { hours: 1 }, // Repeat job every hour
@@ -437,9 +437,9 @@ The worker service can be used in JavaScript/TypeScript projects.
 
 # Worker
 
-The worker service is a kind of background service that regularily checks if a job should be executed and executes the job with the earliest due date. It can also add a new job after execution thus creating end endless reoccuring job.
+The worker service is a kind of background service that regularly checks if a job should be executed and executes the job with the earliest due date. It can also add a new job after execution, thus creating endless reoccurring jobs.
 
-The worker is controlled via settings. You can create your own settings class that must extend from `JobWorkerSettings` and add your own properties that you need for job processing. But you can also just just the provided settings if you don't need your own. Those settings are explained below.
+The worker is controlled via settings. You can create your own settings class that must extend from `JobWorkerSettings` and add your own properties that you need for job processing. But you can also just use the provided settings if you don't need your own. Those settings are explained below.
 
 ## JobWorkerSettings
 
@@ -457,43 +457,43 @@ You can provide the job type in the constructor when instantiating your settings
 
 (Optional, default `30`)
 
-This settings controls the initial delay before the worker will start. This is used to prevent the first job run before the rest of the application is finished starting, due to the way ASP.NET Core handles `BackgroundService`s. The worker will wait the given amount of seconds before looking for the first job.
+This setting controls the initial delay before the worker will start. This is used to prevent the first job run before the rest of the application is finished starting, due to the way ASP.NET Core handles `BackgroundService`s. The worker will wait the given number of seconds before looking for the first job.
 
 ### JobPollingIntervalSeconds
 
 (Optional, default `10`)
 
-This settings controls the time between job processings. Once the [InitialDelaySeconds](#initialdelayseconds) have passed the worker will begin looking for the job of the type specified in the [JobType](#jobtype) that has the oldest due date. After the job is processed or if no job exists the worker will wait the amount of seconds given in this setting until it checks for a job again.
+This setting controls the time between job processing. Once the [InitialDelaySeconds](#initialdelayseconds) have passed the worker will begin looking for the job of the type specified in the [JobType](#jobtype) that has the oldest due date. After the job is processed or if no job exists, the worker will wait the number of seconds given in this setting until it checks for a job again.
 
 ### AddNextJobAfter
 
 (Optional, default `null`)
 
-If a `TimeSpan` is given to this setting then the worker will add a new job after it finishes processing one and set the due date to the current date plus the time span. With this you can create an endless job that is executed every given time span.
+If a `TimeSpan` is given to this setting then the worker will add a new job after it finishes processing one and set the due date to the current date plus the time span. With this you can create an endless job executed every given time span.
 
-Leave this empty if you want a one time job (or create jobs from somewhere else).
+Leave this empty if you want a one-time job (or create jobs from somewhere else).
 
 **Note:** You can specify `TimeSpan` values via `appsettings.json` by following [Standard TimeSpan format strings](https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-timespan-format-strings).
 
-The `JobWorkerBase` has a protected method `AddNextJobIn` that receives the settings instance and the job result. It can be overridden to customize if a new job should be added based on the result of a job. For example you can create a new job if something didn't work out and you want to create a new job to retry the action.
+The `JobWorkerBase` has a protected method `AddNextJobIn` that receives the settings instance and the job result. It can be overridden to customize if a new job should be added based on the result of a job. For example, you can create a new job if something didn't work out, and you want to create a new job to retry the action.
 
 ### AddInitialJob
 
 (Optional, default `false`)
 
-If given the worker will look for a job of the given type with a due date in the past. If none is found the worker creates one and calls the `GetInitialJobParameters` method to get the parameters of it. The due date of the initial job will be the current date plus the [AddNextJobAfter](#addnextjobafter) period of time.
+If given, the worker will look for a job of the given type with a due date in the past. If none is found the worker creates one and calls the `GetInitialJobParameters` method to get the parameters of it. The due date of the initial job will be the current date plus the [AddNextJobAfter](#addnextjobafter) period of time.
 
 ### DeleteJobsOlderThan
 
 (Optional, default `null`)
 
-If a `TimeSpan` is given to this setting then the worker will delete finished jobs after each job run. From the current timestamp the given timespan is substracted, every finished job of the type that is set via `JobType` whose `UpdatedAt` is older than the calculated time is removed from the database. You can use this to prevent an ever growing database, especially when you run jobs in short intervalls.
+If a `TimeSpan` is given to this setting then the worker will delete finished jobs after each job run. From the current timestamp the given timespan is substracted, every finished job of the type that is set via `JobType` whose `UpdatedAt` is older than the calculated time is removed from the database. You can use this to prevent an ever-growing database, especially when you run jobs in short intervalls.
 
-The worker will delete jobs the first time it runs and than every 24 hours. The cleaning will be between `PreJobRunHook` and `PostJobRunHook` after the current job was executed.
+The worker will delete jobs the first time it runs and then every 24 hours. The cleaning will be between `PreJobRunHook` and `PostJobRunHook` after the current job was executed.
 
 **Note:** You can specify `TimeSpan` values via `appsettings.json` by following [Standard TimeSpan format strings](https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-timespan-format-strings).
 
-In `NodeJS` you can give an object with `days`, `hours`, `minutes`, `seconds` or a combination of those. For example, to remove jobs older than 6 months you could set this in you `config.json`:
+In `NodeJS` you can give an object with `days`, `hours`, `minutes`, `seconds` or a combination of those. For example, to remove jobs older than 6 months, you could set this in you `config.json`:
 
 ```json
 {
@@ -510,7 +510,7 @@ In `NodeJS` you can give an object with `days`, `hours`, `minutes`, `seconds` or
 
 The job worker currently implements two metrics using the [.NET metrics](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/metrics). The static Meter is protected, so your worker can use it to add its own metrics to it.
 
-For example you can create a counter and then add to it:
+For example, you can create a counter and then add to it:
 
 ```cs
 public class MyWorker : JobWorkerBase<void, void>
@@ -531,17 +531,17 @@ public class MyWorker : JobWorkerBase<void, void>
 
 ## Health
 
-Implementing proper health checking of your job worker is up to you, however there are some metrics provided by the `JobWorkerBase` that can help you determining if the worker is healthy.
+Implementing proper health checking of your job worker is up to you; however, there are some metrics provided by the `JobWorkerBase` that can help you to determine if the worker is healthy.
 
-The protected properties `LastJobExecutionStart` and `LastJobExecutionStop` (`lastJobExecutionStart` and `lastJobExecutionStop` in NodeJS) are set each time the main execution loop starts and ends. This can be used (along with `JobPollingIntervalSeconds` from worker settings) to calculate if the loop is still beeing executed.
+The protected properties `LastJobExecutionStart` and `LastJobExecutionStop` (`lastJobExecutionStart` and `lastJobExecutionStop` in Node.js) are set each time the main execution loop starts and ends. This can be used (along with `JobPollingIntervalSeconds` from worker settings) to calculate if the loop is still beeing executed.
 
-You can also retrieve basic worker metrics so you know about last time a job actually finished and how long it took to process.
+You can also retrieve basic worker metrics so you know about the last time a job actually finished and how long it took to process.
 
 # Development
 
 ## Tests
 
-To run tests a PostgreSQL server will be needed. If you already have one you can add a appsettings file to `test/DroidSolutions.Oss.JobService.Postgres.Test/appsettings.LocalTest.json` and configure the `DataContext` connection string.
+To run tests, a PostgreSQL server will be needed. If you already have one you can add a appsettings file to `test/DroidSolutions.Oss.JobService.Postgres.Test/appsettings.LocalTest.json` and configure the `DataContext` connection string.
 
 The basic setup for a PostgreSQL container would be the following (you can replace `podman` with `docker`):
 
