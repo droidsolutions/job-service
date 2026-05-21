@@ -139,11 +139,11 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     );
 
     while (!stoppingToken.aborted) {
-      const executed = false;
+      let executed = false;
       this.lastJobExecutionStart = process.hrtime.bigint();
       try {
         await this.preJobRunHookAsync(stoppingToken);
-        await this.handleJobRunAsync(this.settings, stoppingToken, firstRun);
+        executed = await this.handleJobRunAsync(this.settings, stoppingToken, firstRun);
         await this.postJobRunHookAsync(stoppingToken);
 
         firstRun = false;
