@@ -238,11 +238,11 @@ public class JobRepositoryBaseTest
   [Fact]
   public async Task CountJob_ShouldCountAllJobs()
   {
-    var job = new Job<SampleParameter, SampleResult> { State = JobState.Finished, Type = "count-jobs", };
+    var job = new Job<SampleParameter, SampleResult> { State = JobState.Finished, Type = "count-all-jobs", };
     _setup.Context.Jobs.Add(job);
     await _setup.Context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-    long count = await _sut.CountJobsAsync("count-jobs", null, TestContext.Current.CancellationToken);
+    long count = await _sut.CountJobsAsync("count-all-jobs", null, TestContext.Current.CancellationToken);
 
     count.Should().Be(1);
   }
@@ -250,13 +250,13 @@ public class JobRepositoryBaseTest
   [Fact]
   public async Task CountJob_ShouldCountJobsByState()
   {
-    var job1 = new Job<SampleParameter, SampleResult> { State = JobState.Finished, Type = "count-jobs", };
-    var job2 = new Job<SampleParameter, SampleResult> { State = JobState.Started, Type = "count-jobs", };
-    var job3 = new Job<SampleParameter, SampleResult> { State = JobState.Requested, Type = "count-jobs", };
+    var job1 = new Job<SampleParameter, SampleResult> { State = JobState.Finished, Type = "count-by-state-jobs", };
+    var job2 = new Job<SampleParameter, SampleResult> { State = JobState.Started, Type = "count-by-state-jobs", };
+    var job3 = new Job<SampleParameter, SampleResult> { State = JobState.Requested, Type = "count-by-state-jobs", };
     _setup.Context.Jobs.AddRange([job1, job2, job3,]);
     await _setup.Context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-    long count = await _sut.CountJobsAsync("count-jobs", JobState.Started, TestContext.Current.CancellationToken);
+    long count = await _sut.CountJobsAsync("count-by-state-jobs", JobState.Started, TestContext.Current.CancellationToken);
 
     count.Should().Be(1);
   }

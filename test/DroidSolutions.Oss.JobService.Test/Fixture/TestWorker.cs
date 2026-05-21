@@ -13,9 +13,13 @@ using Microsoft.Extensions.Options;
 
 namespace DroidSolutions.Oss.JobService.Test.Fixture;
 
-public class TestWorker : JobWorkerBase<SampleParameter, SampleResult>
+public class TestWorker(
+  IOptionsMonitor<JobWorkerSettings> workerSettings,
+  IServiceProvider serviceProvider,
+  ILogger<JobWorkerBase<SampleParameter, SampleResult>> logger)
+  : JobWorkerBase<SampleParameter, SampleResult>(workerSettings, serviceProvider, logger)
 {
-  private Func<IJob<SampleParameter, SampleResult>, Task<SampleResult?>>? _processFunc;
+  private Func<IJob<SampleParameter, SampleResult>, CancellationToken, Task<SampleResult?>>? _processFunc;
 
   public TestWorker(JobWorkerSettings settings, IServiceProvider serviceProvider)
     : this(
@@ -25,17 +29,9 @@ public class TestWorker : JobWorkerBase<SampleParameter, SampleResult>
   {
   }
 
-  public TestWorker(
-    IOptionsMonitor<JobWorkerSettings> workerSettings,
-    IServiceProvider serviceProvider,
-    ILogger<JobWorkerBase<SampleParameter, SampleResult>> logger)
-    : base(workerSettings, serviceProvider, logger)
-  {
-  }
-
   public bool PostHookCalled { get; private set; }
 
-  public void SetProcessFunction(Func<IJob<SampleParameter, SampleResult>, Task<SampleResult?>> func)
+  public void SetProcessFunction(Func<IJob<SampleParameter, SampleResult>, CancellationToken, Task<SampleResult?>> func)
   {
     _processFunc = func;
   }
@@ -73,15 +69,11 @@ public class TestWorker : JobWorkerBase<SampleParameter, SampleResult>
     return new SampleParameter("something");
   }
 
-  protected override Task<SampleResult?> ProcessJobAsync(
+  protected override async Task<SampleResult?> ProcessJobAsync(
     IJob<SampleParameter, SampleResult> job,
     IServiceScope serviceScope,
     CancellationToken cancellationToken)
   {
-    return _processFunc?.Invoke(job) ?? Task.FromResult<SampleResult?>(new SampleResult
-    {
-      CheckedSomething = true,
-      IgnoredItems = 12,
-    });
+    return _processFunc == null ? null : await _processFunc.Invoke(job, cancellationToken);
   }
 }
