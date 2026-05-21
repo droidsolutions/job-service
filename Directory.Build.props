@@ -1,6 +1,5 @@
 <Project>
   <PropertyGroup>
-    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)stylecop.ruleset</CodeAnalysisRuleSet>
     <Authors>Stefan Ißmer</Authors>
     <Description>Library for working with jobs that may be recurring in distributed systems and microservices.</Description>
     <Company>DroidSolutions GmbH</Company>
