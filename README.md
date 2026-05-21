@@ -506,6 +506,10 @@ In `NodeJS` you can give an object with `days`, `hours`, `minutes`, `seconds` or
 }
 ```
 
+### ResetJobsStuckForMinutes
+
+When the worker starts and `AddInitialJob` is set, the worker will check if there is already a job with the same type and parameters that is not finished. If a job is found that is started, and it's last update is longer then `ResetJobsStuckForMinutes` minutes, the worker will reset the job instead of adding a new one. This can help clean up jobs that are stuck because they were not reset properly during the shutdown.
+
 ## Metrics
 
 The job worker currently implements two metrics using the [.NET metrics](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/metrics). The static Meter is protected, so your worker can use it to add its own metrics to it.

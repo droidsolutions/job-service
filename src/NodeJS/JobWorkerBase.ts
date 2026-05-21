@@ -332,9 +332,9 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
   }
 
   private async addInitialJob(settings: IJobWorkerSettings, cancellationToken: AbortSignal) {
+    const now = new Date();
     // calculate date until which a job with duedate should exist
-    let dueDate = new Date();
-    dueDate = new Date(dueDate.getTime() + dueDate.getTimezoneOffset() * 60000); // convert to UTC
+    let dueDate = new Date(now.getTime() + now.getTimezoneOffset() * 60000); // convert to UTC
     const copy = dueDate;
     if (settings.addNextJobAfter) {
       // use intervall between jobs as limit
@@ -352,7 +352,24 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     const existingJob = await this.jobRepo.findExistingJobAsync(settings.jobType, dueDate, params, true, cancellationToken);
 
     if (existingJob) {
-      this.baseLogger.info("Found existing job %d due %s, skipping add of initial job.", existingJob.id, existingJob.dueDate.toUTCString());
+      // Check if the job is running longer than configured minutes
+      if (
+        existingJob.state === JobState.Started &&
+        existingJob.updatedAt &&
+        settings.resetJobsStuckForMinutes !== undefined &&
+        existingJob.updatedAt < sub(now, { minutes: settings.resetJobsStuckForMinutes })
+      ) {
+        this.baseLogger.warn(
+          { jobId: existingJob.id, updatedAt: existingJob.updatedAt, minutes: settings.resetJobsStuckForMinutes },
+          "Existing job %d is running since %s which is more than configured minutes (%d) and is considered stuck.",
+          existingJob.id,
+          existingJob.updatedAt.toUTCString(),
+          settings.resetJobsStuckForMinutes,
+        );
+        await this.jobRepo.resetJobAsync(existingJob, undefined);
+      } else {
+        this.baseLogger.info("Found existing job %d due %s, skipping add of initial job.", existingJob.id, existingJob.dueDate.toUTCString());
+      }
     } else {
       this.baseLogger.info("Did not find any existing %s job that is due until %s, adding initial job.", settings.jobType, dueDate);
 

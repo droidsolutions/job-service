@@ -423,7 +423,8 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
     }
 
     // calculate time until the next job should be in the database
-    DateTime dueDate = DateTime.UtcNow.Add(spanToCheck);
+    DateTime now = DateTime.UtcNow;
+    DateTime dueDate = now.Add(spanToCheck);
     TParams? parameters = GetInitialJobParameters();
 
     // check if a job already exists that is due until the calculated date
@@ -436,10 +437,25 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
 
     if (existingJob != null)
     {
-      _logger.LogInformation(
-        "Found existing job {ExistingJobId} due {DueDate}, skip adding initial job.",
-        existingJob.Id,
-        existingJob.DueDate);
+      // Check if the job is running longer than configured minutes
+      if (existingJob.State == JobState.Started && existingJob.UpdatedAt.HasValue
+        && settings.ResetJobsStuckForMinutes.HasValue
+        && existingJob.UpdatedAt.Value < now.AddMinutes(-settings.ResetJobsStuckForMinutes.Value))
+      {
+        _logger.LogWarning(
+          "Existing job {ExistingJobId} is running since {JobUpdated} which is more than configured minutes ({Minutes}) and is considered stuck.",
+          existingJob.Id,
+          existingJob.UpdatedAt.Value,
+          settings.ResetJobsStuckForMinutes);
+        await _jobRepository.ResetJobAsync(existingJob, CancellationToken.None);
+      }
+      else
+      {
+        _logger.LogInformation(
+          "Found existing job {ExistingJobId} due {DueDate}, skip adding initial job.",
+          existingJob.Id,
+          existingJob.DueDate);
+      }
     }
     else
     {
