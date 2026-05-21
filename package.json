@@ -40,7 +40,7 @@
   "devDependencies": {
     "@commitlint/cli": "21.0.1",
     "@commitlint/config-conventional": "21.0.1",
-    "@droidsolutions-oss/semantic-release-nuget": "2.0.1",
+    "@droidsolutions-oss/semantic-release-nuget": "2.1.0",
     "@droidsolutions-oss/semantic-release-update-file": "1.4.0",
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/git": "10.0.1",
@@ -130,6 +130,16 @@
             "value": "${nextRelease.gitHead}"
           }
         ]
+      }
+    ],
+    "nugetRegistries": [
+      {
+        "name": "nuget",
+        "type": "nuget"
+      },
+      {
+        "name": "github",
+        "type": "github"
       }
     ]
   }
