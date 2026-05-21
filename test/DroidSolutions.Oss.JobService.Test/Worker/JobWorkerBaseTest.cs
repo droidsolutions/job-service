@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using DroidSolutions.Oss.JobService.Test.Fixture;
 using DroidSolutions.Oss.JobService.Worker.Settings;
 
-using FluentAssertions;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -45,7 +43,8 @@ public class JobWorkerBaseTest
     await worker.StartAsync(TestContext.Current.CancellationToken);
 
     Func<Task> sut = async () => await worker.ExecuteTask!;
-    await sut.Should().ThrowAsync<InvalidOperationException>().WithMessage("Unable to check and start job.");
+    var ex = await Assert.ThrowsAsync<InvalidOperationException>(sut);
+    Assert.Equal("Unable to check and start job.", ex.Message);
   }
 
   [Fact]
@@ -63,7 +62,7 @@ public class JobWorkerBaseTest
     TestWorker sut = new(_settings, provider);
     await sut.StartAsync(cts.Token);
 
-    sut.PostHookCalled.Should().BeFalse();
+    Assert.False(sut.PostHookCalled);
   }
 
   [Fact]
@@ -182,7 +181,7 @@ public class JobWorkerBaseTest
     await runnerReached.Task;
     await worker.StopAsync(TestContext.Current.CancellationToken);
 
-    worker.RunnerName.Should().StartWith("TestWorker-");
+    Assert.StartsWith("TestWorker-", worker.RunnerName);
   }
 
   [Fact]
@@ -237,10 +236,8 @@ public class JobWorkerBaseTest
       await sut.StopAsync(CancellationToken.None);
     };
 
-    await func
-      .Should()
-      .ThrowAsync<InvalidOperationException>()
-      .WithMessage("Unable to set job items because no current job exists.");
+    var ex = await Assert.ThrowsAsync<InvalidOperationException>(func);
+    Assert.Equal("Unable to set job items because no current job exists.", ex.Message);
   }
 
   [Fact]
@@ -251,10 +248,8 @@ public class JobWorkerBaseTest
     TestWorker sut = new(_settings, provider);
 
     Func<Task> func = async () => await sut.CallAddProgressAsync(1);
-    await func
-      .Should()
-      .ThrowAsync<InvalidOperationException>()
-      .WithMessage("Unable to set job items because no job repository is set.");
+    var ex = await Assert.ThrowsAsync<InvalidOperationException>(func);
+    Assert.Equal("Unable to set job items because no job repository is set.", ex.Message);
     await sut.StopAsync(TestContext.Current.CancellationToken);
   }
 

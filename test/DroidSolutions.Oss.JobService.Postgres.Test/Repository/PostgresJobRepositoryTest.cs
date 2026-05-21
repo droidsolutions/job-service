@@ -5,9 +5,6 @@ using DroidSolutions.Oss.JobService.EFCore.Entity;
 using DroidSolutions.Oss.JobService.Postgres.Repository;
 using DroidSolutions.Oss.JobService.Postgres.Test.Fixture;
 
-using FluentAssertions;
-using FluentAssertions.Extensions;
-
 using Microsoft.Extensions.Logging.Abstractions;
 
 using Xunit;
@@ -67,7 +64,7 @@ public class PostgresJobRepositoryTest
       null,
       false,
       TestContext.Current.CancellationToken);
-    job?.Should().BeEquivalentTo(existingJob);
+    Assert.Equivalent(existingJob, job);
   }
 
   [Fact]
@@ -94,7 +91,7 @@ public class PostgresJobRepositoryTest
       null,
       false,
       TestContext.Current.CancellationToken);
-    job.Should().BeNull();
+    Assert.Null(job);
   }
 
   [Fact]
@@ -116,8 +113,8 @@ public class PostgresJobRepositoryTest
       _testParameter,
       false,
       TestContext.Current.CancellationToken);
-    job.Should().NotBeNull();
-    job!.Parameters.Should().BeEquivalentTo(_testParameter);
+    Assert.NotNull(job);
+    Assert.Equivalent(_testParameter, job.Parameters);
   }
 
   [Fact]
@@ -142,7 +139,7 @@ public class PostgresJobRepositoryTest
       searchParam,
       false,
       TestContext.Current.CancellationToken);
-    job.Should().BeNull();
+    Assert.Null(job);
   }
 
   [Fact]
@@ -169,7 +166,7 @@ public class PostgresJobRepositoryTest
       null,
       false,
       TestContext.Current.CancellationToken);
-    job.Should().BeNull();
+    Assert.Null(job);
   }
 
   [Fact]
@@ -196,7 +193,7 @@ public class PostgresJobRepositoryTest
       null,
       true,
       TestContext.Current.CancellationToken);
-    job.Should().NotBeNull();
+    Assert.NotNull(job);
   }
 
   [Fact]
@@ -207,10 +204,10 @@ public class PostgresJobRepositoryTest
       "not-starting-job",
       "usain-bolt",
       TestContext.Current.CancellationToken);
-    await act.Should()
-      .ThrowAsync<InvalidOperationException>()
-      .WithMessage(
-        "There are pending changes that would be saved, please save any pending changes before fetching next job.");
+    var ex = await Assert.ThrowsAsync<InvalidOperationException>(act);
+    Assert.Equal(
+      "There are pending changes that would be saved, please save any pending changes before fetching next job.",
+      ex.Message);
   }
 
   [Fact]
@@ -225,7 +222,7 @@ public class PostgresJobRepositoryTest
       "usain-bolt",
       TestContext.Current.CancellationToken);
 
-    actual.Should().BeNull();
+    Assert.Null(actual);
   }
 
   [Fact]
@@ -245,7 +242,7 @@ public class PostgresJobRepositoryTest
       "usain-bolt",
       TestContext.Current.CancellationToken);
 
-    actual.Should().BeNull();
+    Assert.Null(actual);
   }
 
   [Fact]
@@ -273,11 +270,11 @@ public class PostgresJobRepositoryTest
       "usain-bolt",
       TestContext.Current.CancellationToken);
 
-    actual.Should().NotBeNull();
-    actual!.Id.Should().Be(olderJob.Id);
-    actual!.State.Should().Be(JobState.Started);
-    actual!.UpdatedAt.Should().BeLessThan(10.Seconds()).Before(DateTime.UtcNow);
-    actual!.Parameters.Should().BeEquivalentTo(_testParameter);
+    Assert.NotNull(actual);
+    Assert.Equal(olderJob.Id, actual.Id);
+    Assert.Equal(JobState.Started, actual.State);
+    Assert.InRange(actual.UpdatedAt!.Value, DateTime.UtcNow.AddSeconds(-10), DateTime.UtcNow);
+    Assert.Equivalent(_testParameter, actual.Parameters);
   }
 
   [Fact]
@@ -286,9 +283,10 @@ public class PostgresJobRepositoryTest
     var job = new Job<SampleParameter, SampleResult>();
     _setup.Context.Jobs.Add(job);
     Func<Task> act = async () => await _sut.AddProgressAsync(job, 1, false, TestContext.Current.CancellationToken);
-    await act.Should()
-      .ThrowAsync<InvalidOperationException>()
-      .WithMessage("There are pending changes that would be saved, please save any pending changes before adding progress.");
+    var ex = await Assert.ThrowsAsync<InvalidOperationException>(act);
+    Assert.Equal(
+      "There are pending changes that would be saved, please save any pending changes before adding progress.",
+      ex.Message);
   }
 
   [Fact]
@@ -297,9 +295,8 @@ public class PostgresJobRepositoryTest
     await _setup.Context.SaveChangesAsync(TestContext.Current.CancellationToken); // Save so no pending changes
     Job<SampleParameter, SampleResult> job = new() { Id = 122 };
     Func<Task> act = async () => await _sut.AddProgressAsync(job, 1, false, TestContext.Current.CancellationToken);
-    await act.Should()
-      .ThrowAsync<InvalidOperationException>()
-      .WithMessage("Unable to update progress because no job with id 122 could be found.");
+    var ex = await Assert.ThrowsAsync<InvalidOperationException>(act);
+    Assert.Equal("Unable to update progress because no job with id 122 could be found.", ex.Message);
   }
 
   [Fact]
@@ -311,8 +308,8 @@ public class PostgresJobRepositoryTest
 
     await _sut.AddProgressAsync(job, 1, false, TestContext.Current.CancellationToken);
 
-    job.SuccessfulItems.Should().Be(1);
-    job.UpdatedAt.Should().BeLessThan(10.Seconds()).Before(DateTime.UtcNow);
+    Assert.Equal(1, job.SuccessfulItems);
+    Assert.InRange(job.UpdatedAt!.Value, DateTime.UtcNow.AddSeconds(-10), DateTime.UtcNow);
   }
 
   [Fact]
@@ -324,8 +321,8 @@ public class PostgresJobRepositoryTest
 
     await _sut.AddProgressAsync(job, 4, false, TestContext.Current.CancellationToken);
 
-    job.SuccessfulItems.Should().Be(7);
-    job.UpdatedAt.Should().BeLessThan(10.Seconds()).Before(DateTime.UtcNow);
+    Assert.Equal(7, job.SuccessfulItems);
+    Assert.InRange(job.UpdatedAt!.Value, DateTime.UtcNow.AddSeconds(-10), DateTime.UtcNow);
   }
 
   [Fact]
@@ -337,8 +334,8 @@ public class PostgresJobRepositoryTest
 
     await _sut.AddProgressAsync(job, 2, true, TestContext.Current.CancellationToken);
 
-    job.FailedItems.Should().Be(2);
-    job.SuccessfulItems.Should().BeNull();
+    Assert.Equal(2, job.FailedItems);
+    Assert.Null(job.SuccessfulItems);
   }
 
   // Should be on JobRepositoryBaseTests but those run with in memory db and ExecuteDeleteAsync is not implemented
@@ -355,10 +352,10 @@ public class PostgresJobRepositoryTest
     await _sut.DeleteJobsAsync(deleteType, null, null, TestContext.Current.CancellationToken);
 
     long count = await _sut.CountJobsAsync(deleteType, null, TestContext.Current.CancellationToken);
-    count.Should().Be(0);
+    Assert.Equal(0L, count);
 
     count = await _sut.CountJobsAsync("non-delete-job", null, TestContext.Current.CancellationToken);
-    count.Should().Be(1);
+    Assert.Equal(1L, count);
   }
 
   // Should be on JobRepositoryBaseTests but those run with in memory db and ExecuteDeleteAsync is not implemented
@@ -375,7 +372,7 @@ public class PostgresJobRepositoryTest
     await _sut.DeleteJobsAsync(deleteType, JobState.Finished, null, TestContext.Current.CancellationToken);
 
     long count = await _sut.CountJobsAsync(deleteType, null, TestContext.Current.CancellationToken);
-    count.Should().Be(2);
+    Assert.Equal(2L, count);
   }
 
   // Should be on JobRepositoryBaseTests but those run with in memory db and ExecuteDeleteAsync is not implemented
@@ -411,6 +408,6 @@ public class PostgresJobRepositoryTest
       refDate.AddHours(-18),
       TestContext.Current.CancellationToken);
 
-    result.Should().Be(1);
+    Assert.Equal(1, result);
   }
 }

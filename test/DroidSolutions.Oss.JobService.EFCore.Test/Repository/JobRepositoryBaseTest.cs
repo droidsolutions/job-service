@@ -5,9 +5,6 @@ using System.Threading.Tasks;
 using DroidSolutions.Oss.JobService.EFCore.Entity;
 using DroidSolutions.Oss.JobService.EFCore.Test.Fixture;
 
-using FluentAssertions;
-using FluentAssertions.Extensions;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -47,12 +44,12 @@ public class JobRepositoryBaseTest
       TestContext.Current.CancellationToken);
     DateTime now = DateTime.UtcNow;
 
-    job.Type.Should().Be(type);
-    job.DueDate.Should().Be(dueDate);
-    job.Parameters.Should().BeNull();
-    job.State.Should().Be(JobState.Requested);
-    job.CreatedAt.Should().BeLessThan(10.Seconds()).Before(now);
-    job.Id.Should().NotBe(default);
+    Assert.Equal(type, job.Type);
+    Assert.Equal(dueDate, job.DueDate);
+    Assert.Null(job.Parameters);
+    Assert.Equal(JobState.Requested, job.State);
+    Assert.InRange(job.CreatedAt, now.AddSeconds(-10), now);
+    Assert.NotEqual(0L, job.Id);
   }
 
   [Fact]
@@ -66,7 +63,7 @@ public class JobRepositoryBaseTest
       TestContext.Current.CancellationToken);
     DateTime now = DateTime.UtcNow;
 
-    job.DueDate.Should().BeLessThan(10.Seconds()).Before(now);
+    Assert.InRange(job.DueDate, now.AddSeconds(-10), now);
   }
 
   [Fact]
@@ -79,7 +76,7 @@ public class JobRepositoryBaseTest
       _testParameter,
       TestContext.Current.CancellationToken);
 
-    ((Job<SampleParameter, SampleResult>)job).ParametersSerialized.Should().Be(_jsonString);
+    Assert.Equal(_jsonString, ((Job<SampleParameter, SampleResult>)job).ParametersSerialized);
   }
 
   [Fact]
@@ -95,8 +92,8 @@ public class JobRepositoryBaseTest
 
     await _sut.SetTotalItemsAsync(job, total, TestContext.Current.CancellationToken);
 
-    job.TotalItems.Should().Be(total);
-    job.UpdatedAt.Should().BeLessThan(10.Seconds()).Before(DateTime.UtcNow);
+    Assert.Equal(total, job.TotalItems);
+    Assert.InRange(job.UpdatedAt!.Value, DateTime.UtcNow.AddSeconds(-10), DateTime.UtcNow);
   }
 
   [Fact]
@@ -111,8 +108,8 @@ public class JobRepositoryBaseTest
 
     await _sut.FinishJobAsync(job, null, TestContext.Current.CancellationToken);
 
-    job.State.Should().Be(JobState.Finished);
-    job.UpdatedAt.Should().BeLessThan(10.Seconds()).Before(DateTime.UtcNow);
+    Assert.Equal(JobState.Finished, job.State);
+    Assert.InRange(job.UpdatedAt!.Value, DateTime.UtcNow.AddSeconds(-10), DateTime.UtcNow);
   }
 
   [Fact]
@@ -142,7 +139,7 @@ public class JobRepositoryBaseTest
 
     await _sut.FinishJobAsync(startedJob, null, TestContext.Current.CancellationToken);
 
-    startedJob.ProcessingTimeMs.Should().BeGreaterThan(0);
+    Assert.True(startedJob.ProcessingTimeMs > 0);
   }
 
   [Fact]
@@ -159,7 +156,7 @@ public class JobRepositoryBaseTest
 
     await _sut.FinishJobAsync(job, null, TestContext.Current.CancellationToken);
 
-    job.ResultSerialized.Should().Be("{\"ignoredItems\":42,\"checkedSomething\":true}");
+    Assert.Equal("{\"ignoredItems\":42,\"checkedSomething\":true}", job.ResultSerialized);
   }
 
   [Fact]
@@ -183,7 +180,8 @@ public class JobRepositoryBaseTest
 
     JobBase? nextJob = await _setup.Context.Jobs
       .SingleAsync(x => x.Type == type && x.State == JobState.Requested, TestContext.Current.CancellationToken);
-    nextJob.DueDate.Should().BeLessThan(10.Seconds()).Before(DateTime.UtcNow.AddMinutes(30));
+    var expectedDue = now.AddMinutes(30);
+    Assert.InRange(nextJob.DueDate, expectedDue.AddSeconds(-10), expectedDue.AddSeconds(10));
   }
 
   [Fact]
@@ -202,11 +200,11 @@ public class JobRepositoryBaseTest
 
     await _sut.ResetJobAsync(job, TestContext.Current.CancellationToken);
 
-    job.FailedItems.Should().BeNull();
-    job.Runner.Should().BeNull();
-    job.State.Should().Be(JobState.Requested);
-    job.SuccessfulItems.Should().BeNull();
-    job.TotalItems.Should().BeNull();
+    Assert.Null(job.FailedItems);
+    Assert.Null(job.Runner);
+    Assert.Equal(JobState.Requested, job.State);
+    Assert.Null(job.SuccessfulItems);
+    Assert.Null(job.TotalItems);
   }
 
   [Fact]
@@ -232,7 +230,7 @@ public class JobRepositoryBaseTest
     }
 
     await _sut.ResetJobAsync(job, TestContext.Current.CancellationToken);
-    job.ProcessingTimeMs.Should().BeNull();
+    Assert.Null(job.ProcessingTimeMs);
   }
 
   [Fact]
@@ -244,7 +242,7 @@ public class JobRepositoryBaseTest
 
     long count = await _sut.CountJobsAsync("count-all-jobs", null, TestContext.Current.CancellationToken);
 
-    count.Should().Be(1);
+    Assert.Equal(1L, count);
   }
 
   [Fact]
@@ -258,7 +256,7 @@ public class JobRepositoryBaseTest
 
     long count = await _sut.CountJobsAsync("count-by-state-jobs", JobState.Started, TestContext.Current.CancellationToken);
 
-    count.Should().Be(1);
+    Assert.Equal(1L, count);
   }
 
   [Fact]
@@ -270,6 +268,6 @@ public class JobRepositoryBaseTest
       null,
       TestContext.Current.CancellationToken);
 
-    await act.Should().ThrowAsync<ArgumentException>();
+    await Assert.ThrowsAsync<ArgumentException>(act);
   }
 }
