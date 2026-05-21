@@ -1,7 +1,5 @@
 using DroidSolutions.Oss.JobService.Worker.Settings;
 
-using FluentAssertions;
-
 using Xunit;
 
 namespace DroidSolutions.Oss.JobService.Test.Worker.Settings;
@@ -14,6 +12,6 @@ public class JobWorkerSettingsTest
     var jobType = "job-settings";
     var settings = new JobWorkerSettings(jobType);
 
-    settings.JobType.Should().Be(jobType);
+    Assert.Equal(jobType, settings.JobType);
   }
 }

@@ -1,6 +1,6 @@
 namespace DroidSolutions.Oss.JobService.EFCore.Test.Fixture;
 
-public enum TestEnumParameter
+public enum SampleEnumParameter
 {
   One,
 

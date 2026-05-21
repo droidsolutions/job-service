@@ -3,7 +3,7 @@
   xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <PublishPipelineCollectFilesCore>Stub</PublishPipelineCollectFilesCore>
-    <BuiltProjectOutputGroupDependsOn>Stub</BuiltProjectOutputGroupDependsOn>
+    <!-- <BuiltProjectOutputGroupDependsOn>Stub</BuiltProjectOutputGroupDependsOn> -->
     <!-- Can be used when compile fails to disable TypeScript generation temporarily -->
     <RtDisable>false</RtDisable>
     <RtDivideTypesAmongFiles>true</RtDivideTypesAmongFiles>

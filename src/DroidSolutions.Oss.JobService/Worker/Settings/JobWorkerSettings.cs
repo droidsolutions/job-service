@@ -70,4 +70,12 @@ public class JobWorkerSettings
   /// </summary>
   [TsProperty(Type = "TimeSpan")]
   public TimeSpan? DeleteJobsOlderThan { get; set; }
+
+  /// <summary>
+  /// Gets or sets the amount of minutes a job is considered stuck and should be removed. When set, the worker will
+  /// check existing jobs one time when starting. If any job is running but was updated more than the given amount of
+  /// minutes ago, the job is considered stuck and will be removed. If <see cref="AddInitialJob"/> is set, the worker
+  /// will then add a new pending job.
+  /// </summary>
+  public int? ResetJobsStuckForMinutes { get; set; }
 }

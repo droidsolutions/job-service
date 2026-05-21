@@ -256,8 +256,13 @@ public abstract class JobRepositoryBase<TContext, TParams, TResult> : IJobReposi
   /// <returns>A task indicating when the operation is complete.</returns>
   public async Task ResetJobAsync(IJob<TParams, TResult> job, CancellationToken cancellationToken = default)
   {
-    job.State = JobState.Requested;
+    job.FailedItems = null;
     job.Runner = null;
+    job.ProcessingTimeMs = null;
+    job.State = JobState.Requested;
+    job.SuccessfulItems = null;
+    job.TotalItems = null;
+    job.UpdatedAt = DateTime.UtcNow;
 
     await Context.SaveChangesAsync(cancellationToken);
 

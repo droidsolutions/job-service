@@ -1,6 +1,6 @@
-namespace DroidSolutions.Oss.JobService.EFCore.Test.Fixture;
+namespace DroidSolutions.Oss.JobService.Postgres.Test.Fixture;
 
-public class TestResult
+public class SampleResult
 {
   public int IgnoredItems { get; set; }
 

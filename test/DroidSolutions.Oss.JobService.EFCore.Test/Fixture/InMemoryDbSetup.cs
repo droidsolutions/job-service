@@ -8,10 +8,10 @@ public class InMemoryDbSetup : IDisposable
 {
   public InMemoryDbSetup()
   {
-    Context = new TestContext(new DbContextOptionsBuilder<TestContext>().UseInMemoryDatabase("TestDatabase").Options);
+    Context = new SampleContext(new DbContextOptionsBuilder<SampleContext>().UseInMemoryDatabase("TestDatabase").Options);
   }
 
-  public TestContext Context { get; }
+  public SampleContext Context { get; }
 
   public void Dispose()
   {

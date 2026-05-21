@@ -32,7 +32,7 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
   protected lastJobExecutionStop?: bigint;
 
   /**
-   * Initializes a new instance of the @see JobWorkerBase class.
+   * Initializes a new instance of the {@link JobWorkerBase} class.
    * @param {IJobWorkerSettings} settings The job worker settings.
    * @param {IJobRepository<TParams, TResult>} jobRepo An instance of the job repository.
    * @param {LoggerFactory} loggerFactory A factory function that creates an instance of a logger.
@@ -98,15 +98,15 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
   public abstract getInitialJobParameters(): TParams | undefined;
 
   /**
-   * A hook that is called before a worker runs. Thisi s called before the job is fetched so it might be that no job is
+   * A hook that is called before a worker runs. This is called before the job is fetched so it might be that no job is
    * available.
    */
-  public abstract preJobRunHook(): void;
+  public abstract preJobRunHookAsync(cancellationToken: AbortSignal): Promise<void>;
 
   /**
    * A hook that is called after the job is finished Is also called when no job was available.
    */
-  public abstract postJobRunHook(): void;
+  public abstract postJobRunHookAsync(cancellationToken: AbortSignal): Promise<void>;
 
   /**
    * Should contain the logic needed to handle the job. The promise should resolve to the result of the job.
@@ -118,17 +118,18 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
 
   /**
    * Starts the worker. After a configurable initial delay it will frequently poll for new jobs and take the one with
-   * the oldest due date. Each runs calls @see preJobRunHook @see processJobAsync and @see postJobRunHook . If no job is
-   * available @see processJobAsync is not called.
-   * To stop the worker use the provided stoppingToken.
+   * the oldest due date. Each runs calls {@link preJobRunHookAsync} {@link processJobAsync} and
+   * {@link postJobRunHookAsync}.
+   * If no job is available {@link processJobAsync} is not called. To stop the worker use the provided stoppingToken.
    * @param {AbortSignal} stoppingToken A token that can be used to stop the worker.
    */
   public async executeAsync(stoppingToken: AbortSignal): Promise<void> {
     this.cancellationToken = stoppingToken;
-    await this.delay(this.settings.initialDelaySeconds, stoppingToken);
-
     const runnerId = nanoid(7);
     this.runnerName = `${this.getRunnerName()}-${runnerId}`;
+
+    await this.delay(this.settings.initialDelaySeconds, stoppingToken);
+
     let firstRun = true;
     this.baseLogger.info(
       { runner: this.runnerName },
@@ -139,12 +140,12 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     );
 
     while (!stoppingToken.aborted) {
-      const executed = false;
+      let executed = false;
       this.lastJobExecutionStart = process.hrtime.bigint();
       try {
-        this.preJobRunHook();
-        await this.handleJobRunAsync(this.settings, stoppingToken, firstRun);
-        this.postJobRunHook();
+        await this.preJobRunHookAsync(stoppingToken);
+        executed = await this.handleJobRunAsync(this.settings, stoppingToken, firstRun);
+        await this.postJobRunHookAsync(stoppingToken);
 
         firstRun = false;
       } catch (err) {
@@ -211,7 +212,8 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
    * Determines the time span until the next job should be added after finishing the current one.
    * @param {IJobWorkerSettings} settings - The current job settings.
    * @param {TResult} [result] - The result of the current job.
-   * @returns {TimeSpan | undefined} - The time span until the next job is due, or undefined if no new job should be added.
+   * @returns {TimeSpan | undefined} - The time span until the next job is due, or undefined if no new job should be
+   * added.
    */
   public addNextJobIn(settings: IJobWorkerSettings, result?: TResult): TimeSpan | undefined {
     return settings.addNextJobAfter;
@@ -291,7 +293,9 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     if (this.currentJob) {
       try {
         this.currentJob.result = await this.processJobAsync(this.currentJob, cancellationToken);
-        await this.jobRepo.finishJobAsync(this.currentJob, settings.addNextJobAfter, cancellationToken);
+
+        // Don't pass cancellation token to prevent reset of the job if the app shuts down during FinishJobAsync
+        await this.jobRepo.finishJobAsync(this.currentJob, settings.addNextJobAfter, undefined);
 
         this.executedJobs++;
         executed = true;
@@ -303,7 +307,8 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
           (err as Error).message,
         );
 
-        await this.jobRepo.resetJobAsync(this.currentJob, cancellationToken);
+        // Don't pass cancellation token to properly reset the job if the app shuts down
+        await this.jobRepo.resetJobAsync(this.currentJob, undefined);
 
         // re-throw if cancellation error so job loop ends
         if (cancellationToken.aborted) {
@@ -329,9 +334,9 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
   }
 
   private async addInitialJob(settings: IJobWorkerSettings, cancellationToken: AbortSignal) {
+    const now = new Date();
     // calculate date until which a job with duedate should exist
-    let dueDate = new Date();
-    dueDate = new Date(dueDate.getTime() + dueDate.getTimezoneOffset() * 60000); // convert to UTC
+    let dueDate = new Date(now.getTime() + now.getTimezoneOffset() * 60000); // convert to UTC
     const copy = dueDate;
     if (settings.addNextJobAfter) {
       // use intervall between jobs as limit
@@ -349,7 +354,24 @@ export abstract class JobWorkerBase<TParams, TResult> implements IJobWorkerBase<
     const existingJob = await this.jobRepo.findExistingJobAsync(settings.jobType, dueDate, params, true, cancellationToken);
 
     if (existingJob) {
-      this.baseLogger.info("Found existing job %d due %s, skipping add of initial job.", existingJob.id, existingJob.dueDate.toUTCString());
+      // Check if the job is running longer than configured minutes
+      if (
+        existingJob.state === JobState.Started &&
+        existingJob.updatedAt &&
+        settings.resetJobsStuckForMinutes !== undefined &&
+        existingJob.updatedAt < sub(now, { minutes: settings.resetJobsStuckForMinutes })
+      ) {
+        this.baseLogger.warn(
+          { jobId: existingJob.id, updatedAt: existingJob.updatedAt, minutes: settings.resetJobsStuckForMinutes },
+          "Existing job %d is running since %s which is more than configured minutes (%d) and is considered stuck.",
+          existingJob.id,
+          existingJob.updatedAt.toUTCString(),
+          settings.resetJobsStuckForMinutes,
+        );
+        await this.jobRepo.resetJobAsync(existingJob, undefined);
+      } else {
+        this.baseLogger.info("Found existing job %d due %s, skipping add of initial job.", existingJob.id, existingJob.dueDate.toUTCString());
+      }
     } else {
       this.baseLogger.info("Did not find any existing %s job that is due until %s, adding initial job.", settings.jobType, dueDate);
 

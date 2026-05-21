@@ -1,6 +1,5 @@
 <Project>
   <PropertyGroup>
-    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)stylecop.ruleset</CodeAnalysisRuleSet>
     <Authors>Stefan Ißmer</Authors>
     <Description>Library for working with jobs that may be recurring in distributed systems and microservices.</Description>
     <Company>DroidSolutions GmbH</Company>
@@ -14,8 +13,8 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryBranch>main</RepositoryBranch>
-    <RepositoryCommit>6393be9613636bad874ecefa3be9efe2a2dd5f17</RepositoryCommit>
-    <Version>3.6.0</Version>
+    <RepositoryCommit>f767cad9978f75d78e9fe4f5981b21e21f344f8f</RepositoryCommit>
+    <Version>4.0.0-develop.3</Version>
   </PropertyGroup>
   
   <ItemGroup>

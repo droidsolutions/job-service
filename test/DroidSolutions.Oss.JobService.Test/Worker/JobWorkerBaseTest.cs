@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using DroidSolutions.Oss.JobService.Test.Fixture;
 using DroidSolutions.Oss.JobService.Worker.Settings;
 
-using FluentAssertions;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -29,9 +27,9 @@ public class JobWorkerBaseTest
   [Fact]
   public async Task GetJobAsync_ShouldThrowIfJobCantBeFetched()
   {
-    var optionsMon = new TestOptionsMonitor(_settings);
+    TestOptionsMonitor optionsMon = new(_settings);
 
-    var repoMock = new Mock<IJobRepository<TestParameter, TestResult>>();
+    Mock<IJobRepository<SampleParameter, SampleResult>> repoMock = new();
     repoMock
       .Setup(x => x.GetAndStartFirstPendingJobAsync(_settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()))
       .ThrowsAsync(new Exception("Test"));
@@ -42,18 +40,21 @@ public class JobWorkerBaseTest
 
     var worker = new TestWorker(_settings, provider);
 
-    Func<Task> sut = async () => { await worker.StartAsync(CancellationToken.None); };
-    await sut.Should().ThrowAsync<InvalidOperationException>().WithMessage("Unable to check and start job.");
+    await worker.StartAsync(TestContext.Current.CancellationToken);
+
+    Func<Task> sut = async () => await worker.ExecuteTask!;
+    var ex = await Assert.ThrowsAsync<InvalidOperationException>(sut);
+    Assert.Equal("Unable to check and start job.", ex.Message);
   }
 
   [Fact]
   public async Task ExecuteAsync_ShouldBreakLoop_WhenOperationCanceledExceptionIsThrown()
   {
     CancellationTokenSource cts = new();
-    Mock<IJobRepository<TestParameter, TestResult>> repoMock = new();
+    Mock<IJobRepository<SampleParameter, SampleResult>> repoMock = new();
     repoMock
       .Setup(x => x.GetAndStartFirstPendingJobAsync(_settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-      .Callback(cts.Cancel) // Cancel token so exception handlers matches
+      .Callback(cts.Cancel) // Cancel token so exception handlers match
       .ThrowsAsync(new OperationCanceledException("Test"));
 
     IServiceProvider provider = SetupDi(repoMock.Object);
@@ -61,27 +62,35 @@ public class JobWorkerBaseTest
     TestWorker sut = new(_settings, provider);
     await sut.StartAsync(cts.Token);
 
-    sut.PostHookCalled.Should().BeFalse();
+    Assert.False(sut.PostHookCalled);
   }
 
   [Fact]
   public async Task ExecuteAsync_ShouldBreakLoop_WhenTokenIsCanceled()
   {
-    var job = new TestJob() { Id = 12 };
-    var repoMock = new Mock<IJobRepository<TestParameter, TestResult>>();
+    TestJob job = new() { Id = 12 };
+    Mock<IJobRepository<SampleParameter, SampleResult>> repoMock = new();
     repoMock
       .Setup(x => x.GetAndStartFirstPendingJobAsync(_settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync(job);
 
+    TaskCompletionSource jobFinished = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    repoMock
+      .Setup(x => x.FinishJobAsync(
+        It.Is<TestJob>(j => j.Id == job.Id),
+        _settings.AddNextJobAfter,
+        It.IsAny<CancellationToken>()))
+      .Callback(() => jobFinished.TrySetResult())
+      .Returns(Task.CompletedTask);
+
     IServiceProvider provider = SetupDi(repoMock.Object);
 
-    var worker = new TestWorker(_settings, provider);
+    TestWorker worker = new(_settings, provider);
+    CancellationTokenSource cts = new();
 
-    var cts = new CancellationTokenSource();
-
-    // Wait for the first run to complete
-    cts.CancelAfter(50);
-    await worker.StartAsync(cts.Token);
+    _ = worker.StartAsync(cts.Token);
+    await jobFinished.Task.WaitAsync(TestContext.Current.CancellationToken);
+    cts.Cancel();
 
     repoMock.Verify(
       x => x.GetAndStartFirstPendingJobAsync(_settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()),
@@ -95,11 +104,11 @@ public class JobWorkerBaseTest
   }
 
   [Fact]
-  public async Task ExecuteAsync_ShouldResetJob_WhenTokenIsCanceled()
+  public async Task ExecuteAsync_ShouldResetJob_WhenOperationCanceledExceptionIsThrown()
   {
-    var job = new TestJob() { Id = 12 };
+    TestJob job = new() { Id = 12 };
 
-    var repoMock = new Mock<IJobRepository<TestParameter, TestResult>>();
+    Mock<IJobRepository<SampleParameter, SampleResult>> repoMock = new();
     repoMock
       .Setup(x => x.GetAndStartFirstPendingJobAsync(_settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync(job);
@@ -108,10 +117,10 @@ public class JobWorkerBaseTest
 
     TestWorker worker = new(_settings, provider);
 
-    worker.SetProcessFunction((x) => throw new OperationCanceledException());
+    worker.SetProcessFunction((_j, _ct) => throw new OperationCanceledException());
 
     await worker.StartAsync(CancellationToken.None);
-    await Task.Delay(100);
+    await Task.Delay(100, TestContext.Current.CancellationToken);
     await worker.StopAsync(CancellationToken.None);
 
     repoMock.Verify(
@@ -123,43 +132,93 @@ public class JobWorkerBaseTest
   }
 
   [Fact]
-  public async Task ExecuteAsync_ShouldSetRunnerName()
+  public async Task ExecuteAsync_ShouldResetJob_WhenTokenIsCanceled()
   {
-    var repoMock = new Mock<IJobRepository<TestParameter, TestResult>>();
+    TestJob job = new() { Id = 12, };
+
+    Mock<IJobRepository<SampleParameter, SampleResult>> repoMock = new();
+    repoMock
+      .Setup(x => x.GetAndStartFirstPendingJobAsync(_settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+      .ReturnsAsync(job);
+    repoMock
+      .Setup(x => x.ResetJobAsync(It.Is<TestJob>(x => x.Id == job.Id), CancellationToken.None))
+      .Returns(Task.CompletedTask);
 
     IServiceProvider provider = SetupDi(repoMock.Object);
 
-    var worker = new TestWorker(_settings, provider);
+    TestWorker worker = new(_settings, provider);
+    CancellationTokenSource cts = new();
 
-    worker.SetProcessFunction((x) => throw new OperationCanceledException());
+    worker.SetProcessFunction(
+      async (_j, cancellationToken) =>
+      {
+        await Task.Delay(1000, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
 
-    await worker.StartAsync(CancellationToken.None);
-    await worker.StopAsync(CancellationToken.None);
+        return null;
+      });
 
-    worker.RunnerName.Should().StartWith("TestWorker-");
+    _ = worker.StartAsync(cts.Token);
+    cts.CancelAfter(50);
+    await Task.Delay(100, TestContext.Current.CancellationToken); // Give some time to reset the job
+
+    repoMock.Verify(
+      x => x.GetAndStartFirstPendingJobAsync(_settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()),
+      Times.Once());
+    repoMock.Verify(
+      x => x.ResetJobAsync(It.Is<TestJob>(x => x.Id == job.Id), CancellationToken.None),
+      Times.Once());
+  }
+
+  [Fact]
+  public async Task ExecuteAsync_ShouldSetRunnerName()
+  {
+    TaskCompletionSource runnerReached = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    Mock<IJobRepository<SampleParameter, SampleResult>> repoMock = new();
+    repoMock
+      .Setup(x => x.GetAndStartFirstPendingJobAsync(_settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+      .Callback(() => runnerReached.TrySetResult())
+      .ReturnsAsync((TestJob?)null);
+
+    IServiceProvider provider = SetupDi(repoMock.Object);
+
+    TestWorker worker = new(_settings, provider);
+
+    await worker.StartAsync(TestContext.Current.CancellationToken);
+    await runnerReached.Task;
+    await worker.StopAsync(TestContext.Current.CancellationToken);
+
+    Assert.StartsWith("TestWorker-", worker.RunnerName);
   }
 
   [Fact]
   public async Task SetTotalItemsAsync_ShouldSetProgress()
   {
-    var job = new TestJob() { Id = 121 };
-    var repoMock = new Mock<IJobRepository<TestParameter, TestResult>>();
+    TestJob job = new() { Id = 121 };
+    Mock<IJobRepository<SampleParameter, SampleResult>> repoMock = new();
     repoMock
       .Setup(x => x.GetAndStartFirstPendingJobAsync(_settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync(job);
 
     IServiceProvider provider = SetupDi(repoMock.Object);
 
-    var sut = new TestWorker(_settings, provider);
-    sut.SetProcessFunction(async (x) =>
+    TaskCompletionSource processingStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    TaskCompletionSource releaseProcessing = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    TestWorker sut = new(_settings, provider);
+    sut.SetProcessFunction(async (_j, cancellationToken) =>
     {
-      await Task.Delay(100);
+      processingStarted.SetResult();
+      await releaseProcessing.Task.WaitAsync(cancellationToken);
       return null;
     });
 
-    await sut.StartAsync(CancellationToken.None);
+    await sut.StartAsync(TestContext.Current.CancellationToken);
+    await processingStarted.Task;
     await sut.CallSetTotalItemsAsync(109);
-    await sut.StopAsync(CancellationToken.None);
+    releaseProcessing.SetResult();
+    await sut.StopAsync(TestContext.Current.CancellationToken);
 
     repoMock.Verify(x => x.SetTotalItemsAsync(job, 109, It.IsAny<CancellationToken>()), Times.Once());
   }
@@ -167,9 +226,12 @@ public class JobWorkerBaseTest
   [Fact(Skip = "Find a way to setup state for this without repo being nulled after a run")]
   public async Task SetTotalItemsAsync_ShouldThrowInvalidOperationException_WhenNoCurrentJobIsSet()
   {
-    var repoMock = new Mock<IJobRepository<TestParameter, TestResult>>();
+    var repoMock = new Mock<IJobRepository<SampleParameter, SampleResult>>();
     repoMock
-      .Setup(x => x.GetAndStartFirstPendingJobAsync(_settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+      .Setup(x => x.GetAndStartFirstPendingJobAsync(
+        _settings.JobType,
+        It.IsAny<string>(),
+        It.IsAny<CancellationToken>()))
       .ReturnsAsync((TestJob?)null);
 
     IServiceProvider provider = SetupDi(repoMock.Object);
@@ -182,10 +244,8 @@ public class JobWorkerBaseTest
       await sut.StopAsync(CancellationToken.None);
     };
 
-    await func
-      .Should()
-      .ThrowAsync<InvalidOperationException>()
-      .WithMessage("Unable to set job items because no current job exists.");
+    var ex = await Assert.ThrowsAsync<InvalidOperationException>(func);
+    Assert.Equal("Unable to set job items because no current job exists.", ex.Message);
   }
 
   [Fact]
@@ -193,38 +253,45 @@ public class JobWorkerBaseTest
   {
     IServiceProvider provider = SetupDi(null);
 
-    var sut = new TestWorker(_settings, provider);
+    TestWorker sut = new(_settings, provider);
 
     Func<Task> func = async () => await sut.CallAddProgressAsync(1);
-    await func
-      .Should()
-      .ThrowAsync<InvalidOperationException>()
-      .WithMessage("Unable to set job items because no job repository is set.");
-    await sut.StopAsync(CancellationToken.None);
+    var ex = await Assert.ThrowsAsync<InvalidOperationException>(func);
+    Assert.Equal("Unable to set job items because no job repository is set.", ex.Message);
+    await sut.StopAsync(TestContext.Current.CancellationToken);
   }
 
   [Fact]
   public async Task AddProgressAsync_ShouldAddProgress()
   {
-    var job = new TestJob() { Id = 121 };
+    TestJob job = new() { Id = 121 };
 
-    var repoMock = new Mock<IJobRepository<TestParameter, TestResult>>();
+    Mock<IJobRepository<SampleParameter, SampleResult>> repoMock = new();
     repoMock
-      .Setup(x => x.GetAndStartFirstPendingJobAsync(_settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+      .Setup(x => x.GetAndStartFirstPendingJobAsync(
+        _settings.JobType,
+        It.IsAny<string>(),
+        It.IsAny<CancellationToken>()))
       .ReturnsAsync(job);
 
     IServiceProvider provider = SetupDi(repoMock.Object);
 
+    TaskCompletionSource processingStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    TaskCompletionSource releaseProcessing = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
     var sut = new TestWorker(_settings, provider);
-    sut.SetProcessFunction(async (x) =>
+    sut.SetProcessFunction(async (_j, cancellationToken) =>
     {
-      await Task.Delay(100);
+      processingStarted.SetResult();
+      await releaseProcessing.Task.WaitAsync(cancellationToken);
       return null;
     });
 
-    await sut.StartAsync(CancellationToken.None);
+    await sut.StartAsync(TestContext.Current.CancellationToken);
+    await processingStarted.Task;
     await sut.CallAddProgressAsync(14);
-    await sut.StopAsync(CancellationToken.None);
+    releaseProcessing.SetResult();
+    await sut.StopAsync(TestContext.Current.CancellationToken);
 
     repoMock.Verify(x => x.AddProgressAsync(job, 14, false, It.IsAny<CancellationToken>()), Times.Once());
   }
@@ -232,7 +299,7 @@ public class JobWorkerBaseTest
   [Fact]
   public async Task AddInitialJob_ShouldAddAnInitialJob_IfConfigured()
   {
-    var settings = new JobWorkerSettings
+    JobWorkerSettings settings = new()
     {
       AddInitialJob = true,
       InitialDelaySeconds = 0,
@@ -240,26 +307,29 @@ public class JobWorkerBaseTest
       JobType = "test:job",
     };
 
-    var repoMock = new Mock<IJobRepository<TestParameter, TestResult>>();
+    Mock<IJobRepository<SampleParameter, SampleResult>> repoMock = new();
     repoMock
-      .Setup(x => x.GetAndStartFirstPendingJobAsync(settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+      .Setup(x => x.GetAndStartFirstPendingJobAsync(
+        settings.JobType,
+        It.IsAny<string>(),
+        It.IsAny<CancellationToken>()))
       .ReturnsAsync((TestJob?)null);
 
     IServiceProvider provider = SetupDi(repoMock.Object);
 
-    var sut = new TestWorker(settings, provider);
+    TestWorker sut = new(settings, provider);
 
     DateTime from = DateTime.UtcNow.AddDays(1);
-    await sut.StartAsync(CancellationToken.None);
-    await Task.Delay(10); // Give some time to add job
-    await sut.StopAsync(CancellationToken.None);
+    await sut.StartAsync(TestContext.Current.CancellationToken);
+    await Task.Delay(10, TestContext.Current.CancellationToken); // Give some time to add job
+    await sut.StopAsync(TestContext.Current.CancellationToken);
     DateTime to = DateTime.UtcNow.AddDays(1);
 
     repoMock.Verify(
       x => x.AddJobAsync(
         settings.JobType,
         It.IsInRange(from, to, Moq.Range.Inclusive),
-        It.Is<TestParameter>(x => x.NotNullableString == "something"),
+        It.Is<SampleParameter>(x => x.NotNullableString == "something"),
         It.IsAny<CancellationToken>()),
       Times.Once());
   }
@@ -267,7 +337,7 @@ public class JobWorkerBaseTest
   [Fact]
   public async Task AddInitialJob_ShouldUseAddNextJobAfter_IfConfigured()
   {
-    var settings = new JobWorkerSettings
+    JobWorkerSettings settings = new()
     {
       AddInitialJob = true,
       AddNextJobAfter = TimeSpan.FromHours(3),
@@ -276,26 +346,26 @@ public class JobWorkerBaseTest
       JobType = "test:job",
     };
 
-    var repoMock = new Mock<IJobRepository<TestParameter, TestResult>>();
+    Mock<IJobRepository<SampleParameter, SampleResult>> repoMock = new();
     repoMock
       .Setup(x => x.GetAndStartFirstPendingJobAsync(settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()))
       .ReturnsAsync((TestJob?)null);
 
     IServiceProvider provider = SetupDi(repoMock.Object);
 
-    var sut = new TestWorker(settings, provider);
+    TestWorker sut = new(settings, provider);
 
     DateTime from = DateTime.UtcNow.AddHours(3);
-    await sut.StartAsync(CancellationToken.None);
-    await Task.Delay(10); // Give some time to add job
-    await sut.StopAsync(CancellationToken.None);
+    await sut.StartAsync(TestContext.Current.CancellationToken);
+    await Task.Delay(10, TestContext.Current.CancellationToken); // Give some time to add job
+    await sut.StopAsync(TestContext.Current.CancellationToken);
     DateTime to = DateTime.UtcNow.AddHours(3);
 
     repoMock.Verify(
       x => x.AddJobAsync(
         settings.JobType,
         It.IsInRange(from, to, Moq.Range.Inclusive),
-        It.Is<TestParameter>(x => x.NotNullableString == "something"),
+        It.Is<SampleParameter>(x => x.NotNullableString == "something"),
         It.IsAny<CancellationToken>()),
       Times.Once());
   }
@@ -303,7 +373,7 @@ public class JobWorkerBaseTest
   [Fact]
   public async Task AddInitialJob_ShouldNotAddInitialJob_IfThereIsAnyInDueRange()
   {
-    var settings = new JobWorkerSettings
+    JobWorkerSettings settings = new()
     {
       AddInitialJob = true,
       AddNextJobAfter = TimeSpan.FromHours(3),
@@ -311,21 +381,24 @@ public class JobWorkerBaseTest
       JobPollingIntervalSeconds = 100,
       JobType = "test:job",
     };
-    var existingJob = new TestJob
+    TestJob existingJob = new()
     {
       Id = 54,
       DueDate = DateTime.UtcNow.AddMinutes(5),
     };
 
-    var repoMock = new Mock<IJobRepository<TestParameter, TestResult>>();
+    Mock<IJobRepository<SampleParameter, SampleResult>> repoMock = new();
     repoMock
-      .Setup(x => x.GetAndStartFirstPendingJobAsync(settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+      .Setup(x => x.GetAndStartFirstPendingJobAsync(
+        settings.JobType,
+        It.IsAny<string>(),
+        It.IsAny<CancellationToken>()))
       .ReturnsAsync((TestJob?)null);
     repoMock
       .Setup(x => x.FindExistingJobAsync(
         settings.JobType,
         It.IsAny<DateTime>(),
-        It.Is<TestParameter>(x => x.NotNullableString == "something"),
+        It.Is<SampleParameter>(x => x.NotNullableString == "something"),
         true,
         It.IsAny<CancellationToken>()))
       .ReturnsAsync(existingJob);
@@ -336,7 +409,7 @@ public class JobWorkerBaseTest
 
     DateTime from = DateTime.UtcNow.AddHours(3);
     await sut.StartAsync(CancellationToken.None);
-    await Task.Delay(10); // Give some time to add job
+    await Task.Delay(10, TestContext.Current.CancellationToken); // Give some time to add job
     await sut.StopAsync(CancellationToken.None);
     DateTime to = DateTime.UtcNow.AddHours(3);
 
@@ -344,14 +417,14 @@ public class JobWorkerBaseTest
       x => x.AddJobAsync(
         settings.JobType,
         It.IsAny<DateTime>(),
-        It.Is<TestParameter>(x => x.NotNullableString == "something"),
+        It.Is<SampleParameter>(x => x.NotNullableString == "something"),
         It.IsAny<CancellationToken>()),
       Times.Never());
     repoMock.Verify(
       x => x.FindExistingJobAsync(
         settings.JobType,
         It.IsInRange(from, to, Moq.Range.Inclusive),
-        It.Is<TestParameter>(x => x.NotNullableString == "something"),
+        It.Is<SampleParameter>(x => x.NotNullableString == "something"),
         true,
         It.IsAny<CancellationToken>()),
       Times.Once());
@@ -360,32 +433,35 @@ public class JobWorkerBaseTest
   [Fact]
   public async Task AddFailedProgressAsync_ShouldAddFailedProgres()
   {
-    var job = new TestJob() { Id = 121 };
+    TestJob job = new() { Id = 121 };
 
-    var repoMock = new Mock<IJobRepository<TestParameter, TestResult>>();
+    Mock<IJobRepository<SampleParameter, SampleResult>> repoMock = new();
     repoMock
-      .Setup(x => x.GetAndStartFirstPendingJobAsync(_settings.JobType, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+      .Setup(x => x.GetAndStartFirstPendingJobAsync(
+        _settings.JobType,
+        It.IsAny<string>(),
+        It.IsAny<CancellationToken>()))
       .ReturnsAsync(job);
 
     IServiceProvider provider = SetupDi(repoMock.Object);
 
-    var sut = new TestWorker(_settings, provider);
-    sut.SetProcessFunction(async (x) =>
+    TestWorker sut = new(_settings, provider);
+    sut.SetProcessFunction(async (_j, cancellationToken) =>
     {
-      await Task.Delay(100);
+      await Task.Delay(100, cancellationToken);
       return null;
     });
 
-    await sut.StartAsync(CancellationToken.None);
+    await sut.StartAsync(TestContext.Current.CancellationToken);
     await sut.CallAddFailedProgressAsync(7);
-    await sut.StopAsync(CancellationToken.None);
+    await sut.StopAsync(TestContext.Current.CancellationToken);
 
     repoMock.Verify(x => x.AddProgressAsync(job, 7, true, It.IsAny<CancellationToken>()), Times.Once());
   }
 
-  private static IServiceProvider SetupDi(IJobRepository<TestParameter, TestResult>? repo)
+  private static ServiceProvider SetupDi(IJobRepository<SampleParameter, SampleResult>? repo)
   {
-    var services = new ServiceCollection();
+    ServiceCollection services = new();
     services.AddScoped((x) => repo!);
 
     return services.BuildServiceProvider();

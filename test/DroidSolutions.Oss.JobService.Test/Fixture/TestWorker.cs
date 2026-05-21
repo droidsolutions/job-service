@@ -13,29 +13,25 @@ using Microsoft.Extensions.Options;
 
 namespace DroidSolutions.Oss.JobService.Test.Fixture;
 
-public class TestWorker : JobWorkerBase<TestParameter, TestResult>
+public class TestWorker(
+  IOptionsMonitor<JobWorkerSettings> workerSettings,
+  IServiceProvider serviceProvider,
+  ILogger<JobWorkerBase<SampleParameter, SampleResult>> logger)
+  : JobWorkerBase<SampleParameter, SampleResult>(workerSettings, serviceProvider, logger)
 {
-  private Func<IJob<TestParameter, TestResult>, Task<TestResult?>>? _processFunc;
+  private Func<IJob<SampleParameter, SampleResult>, CancellationToken, Task<SampleResult?>>? _processFunc;
 
   public TestWorker(JobWorkerSettings settings, IServiceProvider serviceProvider)
     : this(
         new TestOptionsMonitor(settings),
         serviceProvider,
-        new NullLoggerFactory().CreateLogger<JobWorkerBase<TestParameter, TestResult>>())
-  {
-  }
-
-  public TestWorker(
-    IOptionsMonitor<JobWorkerSettings> workerSettings,
-    IServiceProvider serviceProvider,
-    ILogger<JobWorkerBase<TestParameter, TestResult>> logger)
-    : base(workerSettings, serviceProvider, logger)
+        new NullLoggerFactory().CreateLogger<JobWorkerBase<SampleParameter, SampleResult>>())
   {
   }
 
   public bool PostHookCalled { get; private set; }
 
-  public void SetProcessFunction(Func<IJob<TestParameter, TestResult>, Task<TestResult?>> func)
+  public void SetProcessFunction(Func<IJob<SampleParameter, SampleResult>, CancellationToken, Task<SampleResult?>> func)
   {
     _processFunc = func;
   }
@@ -55,10 +51,10 @@ public class TestWorker : JobWorkerBase<TestParameter, TestResult>
     await AddFailedProgressAsync(progress);
   }
 
-  protected override void PostJobRunHook()
+  protected override ValueTask PostJobRunHookAsync(CancellationToken cancellationToken)
   {
-    base.PostJobRunHook();
     PostHookCalled = true;
+    return base.PostJobRunHookAsync(cancellationToken);
   }
 
   protected override string GetRunnerName()
@@ -66,22 +62,18 @@ public class TestWorker : JobWorkerBase<TestParameter, TestResult>
     return "TestWorker";
   }
 
-  protected override TestParameter? GetInitialJobParameters()
+  protected override SampleParameter? GetInitialJobParameters()
   {
     base.GetInitialJobParameters(); // For that extra line of coverage ¯\_(ツ)_/¯
 
-    return new TestParameter("something");
+    return new SampleParameter("something");
   }
 
-  protected override Task<TestResult?> ProcessJobAsync(
-    IJob<TestParameter, TestResult> job,
+  protected override async Task<SampleResult?> ProcessJobAsync(
+    IJob<SampleParameter, SampleResult> job,
     IServiceScope serviceScope,
     CancellationToken cancellationToken)
   {
-    return _processFunc?.Invoke(job) ?? Task.FromResult<TestResult?>(new TestResult
-    {
-      CheckedSomething = true,
-      IgnoredItems = 12,
-    });
+    return _processFunc == null ? null : await _processFunc.Invoke(job, cancellationToken);
   }
 }

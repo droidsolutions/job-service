@@ -1,6 +1,6 @@
 {
   "name": "@droidsolutions-oss/job-service",
-  "version": "3.6.0",
+  "version": "4.0.0-develop.3",
   "description": "Base library that provides a way to manage recurring jobs in a database.",
   "main": "dist/src/NodeJS/Index.js",
   "types": "dist/src/NodeJS/Index.d.ts",
@@ -40,7 +40,7 @@
   "devDependencies": {
     "@commitlint/cli": "21.0.1",
     "@commitlint/config-conventional": "21.0.1",
-    "@droidsolutions-oss/semantic-release-nuget": "2.0.1",
+    "@droidsolutions-oss/semantic-release-nuget": "2.1.0",
     "@droidsolutions-oss/semantic-release-update-file": "1.4.0",
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/git": "10.0.1",
@@ -130,6 +130,16 @@
             "value": "${nextRelease.gitHead}"
           }
         ]
+      }
+    ],
+    "nugetRegistries": [
+      {
+        "name": "nuget",
+        "type": "nuget"
+      },
+      {
+        "name": "github",
+        "type": "github"
       }
     ]
   }

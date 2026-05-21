@@ -125,19 +125,27 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   /// <summary>
   /// Hook that is called when a job run starts.
   /// </summary>
-  protected virtual void PreJobRunHook()
+  /// <param name="cancellationToken">A token to cancel the operation.</param>
+  /// <returns>A ValueTask that represents the asynchronous operation.</returns>
+  [TsFunction(Type = "Promise<void>")]
+  protected virtual ValueTask PreJobRunHookAsync([TsParameter(Type = "AbortSignal")] CancellationToken cancellationToken)
   {
+    return ValueTask.CompletedTask;
   }
 
   /// <summary>
   /// Hook that is called when a job run ends.
   /// </summary>
-  protected virtual void PostJobRunHook()
+  /// <param name="cancellationToken">A token to cancel the operation.</param>
+  /// <returns>A ValueTask that represents the asynchronous operation.</returns>
+  [TsFunction(Type = "Promise<void>")]
+  protected virtual ValueTask PostJobRunHookAsync([TsParameter(Type = "AbortSignal")] CancellationToken cancellationToken)
   {
+    return ValueTask.CompletedTask;
   }
 
   /// <summary>
-  /// Processes the job and returns the result if any.
+  /// Processes the job and returns the result, if any.
   /// </summary>
   /// <param name="job">The job.</param>
   /// <param name="serviceScope">A service scope for injecting additional services.</param>
@@ -175,11 +183,11 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
 
       try
       {
-        PreJobRunHook();
+        await PreJobRunHookAsync(stoppingToken);
         JobWorkerSettings settings = _workerSettings.CurrentValue;
         executed = await HandleJobRunAsync(settings, stoppingToken, isFirstRun);
 
-        PostJobRunHook();
+        await PostJobRunHookAsync(stoppingToken);
         isFirstRun = false;
       }
       catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -301,9 +309,13 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
     {
       try
       {
+        _logger.LogDebug("Start processing job.");
         _currentJob.Result = await ProcessJobAsync(_currentJob, serviceScope, cancellationToken);
         TimeSpan? nextJobIn = AddNextJobIn(settings, _currentJob.Result);
-        await _jobRepository.FinishJobAsync(_currentJob, nextJobIn, cancellationToken);
+
+        // Prevent reset of the job if the app shuts during FinishJobAsync
+        await _jobRepository.FinishJobAsync(_currentJob, nextJobIn, CancellationToken.None);
+        _logger.LogDebug("Finished job.");
 
         _executedJobs++;
         ExecutedJobsCounter.Add(1, new KeyValuePair<string, object?>("type", _currentJob.Type));
@@ -317,8 +329,8 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
           _currentJob.Id,
           ex.Message);
 
-        // Since operation was cancelled (probably cause app is shutting down) no sense in forwarding our token
-        await _jobRepository.ResetJobAsync(_currentJob, default);
+        // Since the operation was canceled (probably because the app is shutting down) no sense in forwarding our token
+        await _jobRepository.ResetJobAsync(_currentJob, CancellationToken.None);
 
         if (ex is OperationCanceledException && cancellationToken.IsCancellationRequested)
         {
@@ -339,7 +351,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
       {
         await DeleteOldJobs(settings.DeleteJobsOlderThan.Value, settings.JobType, cancellationToken);
       }
-      catch (Exception ex)
+      catch (Exception ex) when (ex is not OperationCanceledException)
       {
         _logger.LogError(ex, "Error deleting old jobs: {Message}", ex.Message);
       }
@@ -365,6 +377,7 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
   {
     try
     {
+      _logger.LogDebug("Checking for next job.");
       return await repo.GetAndStartFirstPendingJobAsync(settings.JobType, RunnerName, cancellationToken);
     }
     catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
@@ -410,7 +423,8 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
     }
 
     // calculate time until the next job should be in the database
-    DateTime dueDate = DateTime.UtcNow.Add(spanToCheck);
+    DateTime now = DateTime.UtcNow;
+    DateTime dueDate = now.Add(spanToCheck);
     TParams? parameters = GetInitialJobParameters();
 
     // check if a job already exists that is due until the calculated date
@@ -423,10 +437,25 @@ public abstract class JobWorkerBase<TParams, TResult> : BackgroundService, IJobW
 
     if (existingJob != null)
     {
-      _logger.LogInformation(
-        "Found existing job {ExistingJobId} due {DueDate}, skip adding initial job.",
-        existingJob.Id,
-        existingJob.DueDate);
+      // Check if the job is running longer than configured minutes
+      if (existingJob.State == JobState.Started && existingJob.UpdatedAt.HasValue
+        && settings.ResetJobsStuckForMinutes.HasValue
+        && existingJob.UpdatedAt.Value < now.AddMinutes(-settings.ResetJobsStuckForMinutes.Value))
+      {
+        _logger.LogWarning(
+          "Existing job {ExistingJobId} is running since {JobUpdated} which is more than configured minutes ({Minutes}) and is considered stuck.",
+          existingJob.Id,
+          existingJob.UpdatedAt.Value,
+          settings.ResetJobsStuckForMinutes);
+        await _jobRepository.ResetJobAsync(existingJob, CancellationToken.None);
+      }
+      else
+      {
+        _logger.LogInformation(
+          "Found existing job {ExistingJobId} due {DueDate}, skip adding initial job.",
+          existingJob.Id,
+          existingJob.DueDate);
+      }
     }
     else
     {

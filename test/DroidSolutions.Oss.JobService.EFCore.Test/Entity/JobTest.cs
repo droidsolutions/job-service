@@ -3,8 +3,6 @@ using System;
 using DroidSolutions.Oss.JobService.EFCore.Entity;
 using DroidSolutions.Oss.JobService.EFCore.Test.Fixture;
 
-using FluentAssertions;
-
 using Xunit;
 
 namespace DroidSolutions.Oss.JobService.EFCore.Test.Entity;
@@ -21,10 +19,10 @@ public class JobTest
     JobState state = JobState.Requested;
     var job = new JobBase(id, now, due, state, type);
 
-    job.Id.Should().Be(id);
-    job.CreatedAt.Should().Be(now);
-    job.DueDate.Should().Be(due);
-    job.Type.Should().Be(type);
-    job.State.Should().Be(state);
+    Assert.Equal(id, job.Id);
+    Assert.Equal(now, job.CreatedAt);
+    Assert.Equal(due, job.DueDate);
+    Assert.Equal(type, job.Type);
+    Assert.Equal(state, job.State);
   }
 }
