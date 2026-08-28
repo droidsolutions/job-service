@@ -19,6 +19,8 @@ public class TestWorker(
   ILogger<JobWorkerBase<SampleParameter, SampleResult>> logger)
   : JobWorkerBase<SampleParameter, SampleResult>(workerSettings, serviceProvider, logger)
 {
+  private readonly TaskCompletionSource _jobRunCompleted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
   private Func<IJob<SampleParameter, SampleResult>, CancellationToken, Task<SampleResult?>>? _processFunc;
 
   public TestWorker(JobWorkerSettings settings, IServiceProvider serviceProvider)
@@ -30,6 +32,15 @@ public class TestWorker(
   }
 
   public bool PostHookCalled { get; private set; }
+
+  /// <summary>
+  /// Gets a task that completes once the worker has finished its first job run iteration.
+  /// </summary>
+  /// <remarks>
+  /// Lets a test wait for the worker to actually reach a state instead of sleeping for an
+  /// arbitrary amount of time, which is racy on a loaded machine.
+  /// </remarks>
+  public Task JobRunCompleted => _jobRunCompleted.Task;
 
   public void SetProcessFunction(Func<IJob<SampleParameter, SampleResult>, CancellationToken, Task<SampleResult?>> func)
   {
@@ -54,6 +65,7 @@ public class TestWorker(
   protected override ValueTask PostJobRunHookAsync(CancellationToken cancellationToken)
   {
     PostHookCalled = true;
+    _jobRunCompleted.TrySetResult();
     return base.PostJobRunHookAsync(cancellationToken);
   }
 

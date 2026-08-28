@@ -223,29 +223,56 @@ public class JobWorkerBaseTest
     repoMock.Verify(x => x.SetTotalItemsAsync(job, 109, It.IsAny<CancellationToken>()), Times.Once());
   }
 
-  [Fact(Skip = "Find a way to setup state for this without repo being nulled after a run")]
+  [Fact]
   public async Task SetTotalItemsAsync_ShouldThrowInvalidOperationException_WhenNoCurrentJobIsSet()
   {
+    // Deleting old jobs happens while the repository is still set but the current job has already
+    // been reset, which is exactly the state this test needs. Blocking inside the mock holds the
+    // worker in that window instead of relying on timing.
+    JobWorkerSettings settings = new()
+    {
+      InitialDelaySeconds = 0,
+      JobPollingIntervalSeconds = 100,
+      JobType = "Test-job",
+      DeleteJobsOlderThan = TimeSpan.FromDays(1),
+    };
+
+    TaskCompletionSource deletingOldJobs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    TaskCompletionSource releaseDeletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
     var repoMock = new Mock<IJobRepository<SampleParameter, SampleResult>>();
     repoMock
       .Setup(x => x.GetAndStartFirstPendingJobAsync(
-        _settings.JobType,
+        settings.JobType,
         It.IsAny<string>(),
         It.IsAny<CancellationToken>()))
       .ReturnsAsync((TestJob?)null);
+    repoMock
+      .Setup(x => x.DeleteJobsAsync(
+        settings.JobType,
+        It.IsAny<JobState?>(),
+        It.IsAny<DateTime?>(),
+        It.IsAny<CancellationToken>()))
+      .Returns(async () =>
+      {
+        deletingOldJobs.TrySetResult();
+        await releaseDeletion.Task;
+        return 0;
+      });
 
     IServiceProvider provider = SetupDi(repoMock.Object);
 
-    var sut = new TestWorker(_settings, provider);
-    Func<Task> func = async () =>
-    {
-      await sut.StartAsync(CancellationToken.None);
-      await sut.CallSetTotalItemsAsync(1);
-      await sut.StopAsync(CancellationToken.None);
-    };
+    var sut = new TestWorker(settings, provider);
 
+    await sut.StartAsync(CancellationToken.None);
+    await deletingOldJobs.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+
+    Func<Task> func = async () => await sut.CallSetTotalItemsAsync(1);
     var ex = await Assert.ThrowsAsync<InvalidOperationException>(func);
     Assert.Equal("Unable to set job items because no current job exists.", ex.Message);
+
+    releaseDeletion.SetResult();
+    await sut.StopAsync(CancellationToken.None);
   }
 
   [Fact]
@@ -321,7 +348,7 @@ public class JobWorkerBaseTest
 
     DateTime from = DateTime.UtcNow.AddDays(1);
     await sut.StartAsync(TestContext.Current.CancellationToken);
-    await Task.Delay(10, TestContext.Current.CancellationToken); // Give some time to add job
+    await sut.JobRunCompleted.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
     await sut.StopAsync(TestContext.Current.CancellationToken);
     DateTime to = DateTime.UtcNow.AddDays(1);
 
@@ -357,7 +384,7 @@ public class JobWorkerBaseTest
 
     DateTime from = DateTime.UtcNow.AddHours(3);
     await sut.StartAsync(TestContext.Current.CancellationToken);
-    await Task.Delay(10, TestContext.Current.CancellationToken); // Give some time to add job
+    await sut.JobRunCompleted.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
     await sut.StopAsync(TestContext.Current.CancellationToken);
     DateTime to = DateTime.UtcNow.AddHours(3);
 
@@ -409,7 +436,7 @@ public class JobWorkerBaseTest
 
     DateTime from = DateTime.UtcNow.AddHours(3);
     await sut.StartAsync(CancellationToken.None);
-    await Task.Delay(10, TestContext.Current.CancellationToken); // Give some time to add job
+    await sut.JobRunCompleted.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
     await sut.StopAsync(CancellationToken.None);
     DateTime to = DateTime.UtcNow.AddHours(3);
 
@@ -445,15 +472,21 @@ public class JobWorkerBaseTest
 
     IServiceProvider provider = SetupDi(repoMock.Object);
 
+    TaskCompletionSource processingStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    TaskCompletionSource releaseProcessing = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
     TestWorker sut = new(_settings, provider);
     sut.SetProcessFunction(async (_j, cancellationToken) =>
     {
-      await Task.Delay(100, cancellationToken);
+      processingStarted.SetResult();
+      await releaseProcessing.Task.WaitAsync(cancellationToken);
       return null;
     });
 
     await sut.StartAsync(TestContext.Current.CancellationToken);
+    await processingStarted.Task;
     await sut.CallAddFailedProgressAsync(7);
+    releaseProcessing.SetResult();
     await sut.StopAsync(TestContext.Current.CancellationToken);
 
     repoMock.Verify(x => x.AddProgressAsync(job, 7, true, It.IsAny<CancellationToken>()), Times.Once());
