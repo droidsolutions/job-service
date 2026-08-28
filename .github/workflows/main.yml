@@ -29,6 +29,12 @@ jobs:
     runs-on: ubuntu-latest
     container: mcr.microsoft.com/dotnet/sdk:10.0
     name: coverage
+    env:
+      # The dotnet/sdk:10.0 image ships /etc/timezone containing "/UTC" (and
+      # /etc/localtime -> /usr/share/zoneinfo//UTC). The coveralls reporter is a
+      # Crystal binary and Time::Location rejects a name starting with "/",
+      # crashing with InvalidLocationNameError. Setting TZ bypasses the lookup.
+      TZ: UTC
     services:
       # Label used to access the service container
       postgres:
